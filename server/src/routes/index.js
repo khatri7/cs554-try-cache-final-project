@@ -1,11 +1,12 @@
 import express from 'express';
+import authRoutes from './auth';
 
 const router = express.Router();
 
-router.route('/').get((req, res) => {
-	res.json({
-		message: 'Hello Word!',
-	});
+router.use('/auth', authRoutes);
+
+router.use('*', (req, res) => {
+	res.status(404).json({ error: 'Not found' });
 });
 
 export default router;
