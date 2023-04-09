@@ -1,5 +1,5 @@
-import React from 'react';
 import Test from 'components/Test';
+import React from 'react';
 
 function App() {
 	return (
