@@ -11,16 +11,16 @@ const dbConnection = async () => {
 	return db;
 };
 
-const closeConnection = () => {
-	connection?.close();
-};
+// const closeConnection = () => {
+// 	connection?.close();
+// };
 
 const getCollectionFn = (collection) => {
 	let col;
 	return async () => {
 		if (!col) {
-			const db = await dbConnection.dbConnection();
-			col = await db.collection(collection);
+			const database = await dbConnection();
+			col = await database.collection(collection);
 		}
 		return col;
 	};

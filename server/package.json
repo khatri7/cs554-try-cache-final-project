@@ -4,6 +4,27 @@
 	"description": "",
 	"type": "module",
 	"main": "index.js",
+	"scripts": {
+		"start": "node --experimental-specifier-resolution=node index.js",
+		"server": "node --watch --experimental-specifier-resolution=node index.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "MIT",
+	"dependencies": {
+		"bcrypt": "^5.1.0",
+		"cookie-parser": "^1.4.6",
+		"cors": "^2.8.5",
+		"dotenv": "^16.0.3",
+		"express": "^4.18.2",
+		"firebase-admin": "^11.5.0",
+		"jsonwebtoken": "^9.0.0",
+		"moment": "^2.29.4",
+		"mongodb": "^5.2.0"
+	},
+	"devDependencies": {
+		"eslint-config-airbnb-base": "^15.0.0"
+	},
 	"eslintConfig": {
 		"env": {
 			"es2021": true,
@@ -13,26 +34,24 @@
 			"airbnb-base",
 			"plugin:prettier/recommended"
 		],
-		"parser": "babel-eslint",
+		"parserOptions": {
+			"ecmaVersion": 12,
+			"sourceType": "module"
+		},
 		"plugins": [
 			"prettier"
-		]
-	},
-	"scripts": {
-		"start": "node --experimental-specifier-resolution=node index.js",
-		"server": "node --watch --experimental-specifier-resolution=node index.js",
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"author": "",
-	"license": "MIT",
-	"dependencies": {
-		"cors": "^2.8.5",
-		"dotenv": "^16.0.3",
-		"express": "^4.18.2",
-		"firebase-admin": "^11.5.0",
-		"mongodb": "^5.2.0"
-	},
-	"devDependencies": {
-		"eslint-config-airbnb-base": "^15.0.0"
+		],
+		"rules": {
+			"import/no-unresolved": [
+				"error",
+				{
+					"ignore": [
+						"^firebase-admin/.+"
+					]
+				}
+			],
+			"no-underscore-dangle": "off",
+			"import/prefer-default-export": "warn"
+		}
 	}
 }
