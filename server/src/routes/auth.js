@@ -15,7 +15,7 @@ import authenticateToken from '../middlewares/auth';
 
 const FOUR_DAYS = 345600000;
 
-const reqHanlerWrapper = (reqHandler) => (req, res, next) => {
+export const reqHanlerWrapper = (reqHandler) => (req, res, next) => {
 	reqHandler(req, res, next).catch(next);
 };
 

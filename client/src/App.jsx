@@ -1,12 +1,19 @@
-import Test from 'components/Test';
 import React from 'react';
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import Layout from 'components/Layout';
+import { BrowserRouter as Router } from 'react-router-dom';
+import Routes from 'routes';
 
 function App() {
 	return (
-		<div>
-			<p>Hello World!</p>
-			<Test />
-		</div>
+		<Layout>
+			<Router>
+				<Routes />
+			</Router>
+		</Layout>
 	);
 }
 

@@ -77,10 +77,10 @@ export const isBoolean = (param) => {
 
 /**
  *
- * @param {string} str
+ * @param {string} strParam
  * @param {string} varName
- * @param {("min" | "max" | "equal")} compareOp
- * @param {number} compareVal
+ * @param {("min" | "max" | "equal")} [compareOp]
+ * @param {number} [compareVal]
  * @returns str after trimming if it is a valid string input
  */
 export const isValidStr = (strParam, varName, compareOp, compareVal) => {
@@ -115,6 +115,31 @@ export const isValidStr = (strParam, varName, compareOp, compareVal) => {
 		}
 	}
 	return str;
+};
+
+export const isValidNum = (num, varName, compareOp, compareVal) => {
+	if (!num) throw badRequestErr(`You need to provide a ${varName}`);
+	if (typeof num !== 'number' || !Number.isFinite(num))
+		throw badRequestErr(`${varName} should be of type number`);
+	if (compareOp && compareVal) {
+		switch (compareOp) {
+			case 'min':
+				if (num < compareVal)
+					throw badRequestErr(`${varName} cannot be less than ${compareVal}`);
+				break;
+			case 'max':
+				if (num > compareVal)
+					throw badRequestErr(`${varName} cannot be more than ${compareVal}`);
+				break;
+			case 'equal':
+				if (num !== compareVal)
+					throw badRequestErr(`${varName} should equal ${compareVal}`);
+				break;
+			default:
+				break;
+		}
+	}
+	return num;
 };
 
 /**
@@ -161,8 +186,8 @@ export const isValidObj = (obj) =>
 
 /**
  *
- * @param {string} id
- * @returns {ObjectId} the object id string if it is valid otherwise throws an error
+ * @param {string} idParam
+ * @returns {string} the object id string if it is valid otherwise throws an error
  */
 export const isValidObjectId = (idParam) => {
 	const id = isValidStr(idParam, 'Id');

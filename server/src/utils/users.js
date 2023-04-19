@@ -6,11 +6,12 @@ import {
 	isLetterChar,
 	isNumberChar,
 	isValidObj,
+	isValidObjectId,
 	isValidStr,
 } from '.';
 
 const SALT_ROUNDS = 16;
-const USER_ROLES = ['tenant', 'owner'];
+const USER_ROLES = ['tenant', 'lessor'];
 
 // Taken from HTML spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
 const rEmail =
@@ -19,7 +20,7 @@ const rEmail =
 
 /**
  *
- * @param {string} email
+ * @param {string} emailParam
  * @returns {string} email after trimming and converting to lower case if it is a valid email otherwise throws an error
  */
 export const isValidEmail = (emailParam) => {
@@ -31,7 +32,7 @@ export const isValidEmail = (emailParam) => {
 /**
  *
  * @param {string} password
- * @returns {string} hash of the password
+ * @returns {Promise<string>} hash of the password
  */
 export const hashPassword = async (password) => {
 	try {
@@ -46,7 +47,7 @@ export const hashPassword = async (password) => {
  *
  * @param {string} password plain text password to compare
  * @param {string} hash hash of the password from DB
- * @returns {boolean} result of the comparision or throws an error
+ * @returns {Promise<boolean>} result of the comparision or throws an error
  */
 export const comparePassword = async (password, hash) => {
 	try {
@@ -59,7 +60,7 @@ export const comparePassword = async (password, hash) => {
 
 /**
  *
- * @param {string} password
+ * @param {string} passwordParam
  * @returns {string} password if it is a valid password otherwise throws an error
  */
 const isValidPassword = (passwordParam) => {
@@ -71,7 +72,7 @@ const isValidPassword = (passwordParam) => {
 
 /**
  *
- * @param {string} role
+ * @param {string} roleParam
  * @returns {string} role trimmed if it is valid otherwise throws an error
  */
 export const isValidUserRole = (roleParam) => {
@@ -86,28 +87,28 @@ export const isValidUserRole = (roleParam) => {
  * @param {string} varName
  * @returns {import('moment').Moment} moment date object is the date is valid
  */
-const isValidDateStr = (dateParam, varName) => {
+export const isValidDateStr = (dateParam, varName) => {
 	const date = isValidStr(dateParam, varName);
 	date.split('').forEach((char) => {
 		if (!isNumberChar(char) && char !== '-')
 			throw badRequestErr(`Invalid ${varName}`);
 	});
-	let [month, day, year] = date.split('-');
+	const [month, day, year] = date.split('-');
 	if (month.length !== 2 || day.length !== 2 || year.length !== 4)
 		throw badRequestErr(`Invalid ${varName}`);
-	year = parseInt(year.trim(), 10);
-	month = parseInt(month.trim(), 10);
-	day = parseInt(day.trim(), 10);
+	const yearInt = parseInt(year.trim(), 10);
+	const monthInt = parseInt(month.trim(), 10);
+	const dayInt = parseInt(day.trim(), 10);
 	if (
-		!Number.isFinite(year) ||
-		!Number.isFinite(month) ||
-		!Number.isFinite(day)
+		!Number.isFinite(yearInt) ||
+		!Number.isFinite(monthInt) ||
+		!Number.isFinite(dayInt)
 	)
 		throw badRequestErr(`Invalid ${varName}`);
 	const momentDate = moment(
-		`${year.toString().padStart(4, '0')}-${month
+		`${yearInt.toString().padStart(4, '0')}-${monthInt
 			.toString()
-			.padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+			.padStart(2, '0')}-${dayInt.toString().padStart(2, '0')}`
 	);
 	if (!momentDate.isValid()) throw badRequestErr(`Invalid ${varName}`);
 	return momentDate;
@@ -115,7 +116,7 @@ const isValidDateStr = (dateParam, varName) => {
 
 /**
  *
- * @param {string} date in format MM-DD-YYYY
+ * @param {string} dateParam in format MM-DD-YYYY
  * @returns {string} date string if it is valid otherwise throws an error
  */
 const isValidDob = (dateParam) => {
@@ -129,7 +130,7 @@ const isValidDob = (dateParam) => {
 
 /**
  *
- * @param {string} name
+ * @param {string} nameParam
  * @param {string} varName
  * @param {boolean} allowPunctuations
  * @returns {string} name after trimming if it is a valid director name otherwise throws an error
@@ -154,7 +155,7 @@ const isValidName = (nameParam, varName, allowPunctuations = false) => {
 
 /**
  *
- * @param {object} userObj
+ * @param {object} userObjParam
  * @returns {object} user object after validating each field
  */
 export const isValidUserObj = (userObjParam) => {
@@ -176,3 +177,9 @@ export const isValidUserLoginObj = (userLoginObjParam) => {
 		password: isValidPassword(userLoginObjParam.password),
 	};
 };
+
+export const isValidUserAuthObj = (userAuthObjParam) => ({
+	_id: isValidObjectId(userAuthObjParam._id),
+	email: isValidEmail(userAuthObjParam.email),
+	role: isValidUserRole(userAuthObjParam.role),
+});
