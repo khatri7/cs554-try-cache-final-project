@@ -25,6 +25,6 @@ const getCollectionFn = (collection) => {
 		return col;
 	};
 };
-
+export const applications = getCollectionFn('applications');
 export const users = getCollectionFn('users');
 export const listings = getCollectionFn('listings');
