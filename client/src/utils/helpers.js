@@ -6,7 +6,7 @@ export const getLocationDetails = async (location) => {
 		const result = await getDetails({ placeId });
 		const {
 			name,
-			formatted_address: streedAddress,
+			formatted_address: streetAddress,
 			url,
 			vicinity,
 			address_components: addressComponents,
@@ -16,13 +16,28 @@ export const getLocationDetails = async (location) => {
 		return {
 			name,
 			placeId,
-			streedAddress,
+			streetAddress,
 			url,
 			vicinity,
 			addressComponents,
 			types,
 			lat,
 			lng,
+		};
+	}
+	return false;
+};
+
+export const getSelectedAreaCoordinates = async (location) => {
+	if (location) {
+		const { place_id: placeId } = location;
+		const result = await getDetails({ placeId });
+		const { geometry, formatted_address: formattedAddress } = result;
+		const coordinates = JSON.parse(JSON.stringify(geometry?.viewport));
+		return {
+			...coordinates,
+			placeId,
+			formattedAddress,
 		};
 	}
 	return false;

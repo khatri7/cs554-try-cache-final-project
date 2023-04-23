@@ -7,8 +7,15 @@ import {
 	isValidObjectId,
 	notFoundErr,
 } from '../../utils';
-import { isValidCreateListingObj } from '../../utils/listings';
+import {
+	isValidCreateListingObj,
+	isValidSearchAreaQuery,
+} from '../../utils/listings';
 import { isValidUserAuthObj } from '../../utils/users';
+import redis from '../../configs/redis';
+
+// One day in seconds
+const ONE_DAY = 86400;
 
 export const getListingById = async (idParam) => {
 	const id = isValidObjectId(idParam);
@@ -66,4 +73,33 @@ export const createListing = async (listingObjParam, user) => {
 		createListingAck.insertedId.toString()
 	);
 	return createdListing;
+};
+
+export const getListings = async (searchAreaParam) => {
+	const searchArea = isValidSearchAreaQuery(searchAreaParam);
+	const listingsFromCache = await redis.read(searchArea.placeId);
+	if (listingsFromCache) return listingsFromCache.listings;
+	const listingsCollection = await listings();
+	const listingsArr = await listingsCollection
+		.find({
+			location: {
+				$geoWithin: {
+					$box: [
+						[searchArea.west, searchArea.south],
+						[searchArea.east, searchArea.north],
+					],
+				},
+			},
+		})
+		.toArray();
+	await redis.cache(
+		searchArea.placeId,
+		{
+			...searchArea,
+			listings: listingsArr,
+		},
+		{ EX: ONE_DAY },
+		true
+	);
+	return listingsArr;
 };

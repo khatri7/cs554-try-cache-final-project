@@ -1,3 +1,4 @@
+import CreateListing from 'pages/CreateListing';
 import Home from 'pages/Home';
 import Listings from 'pages/Listings';
 import React from 'react';
@@ -7,7 +8,9 @@ function Routes() {
 	return (
 		<RRDRoutes>
 			<Route index element={<Home />} />
-			<Route path="/listings" element={<Listings />} />
+			<Route path="/listings" element={<Listings />}>
+				<Route path="create" element={<CreateListing />} />
+			</Route>
 		</RRDRoutes>
 	);
 }

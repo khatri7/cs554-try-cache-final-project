@@ -1,15 +1,19 @@
 import { Container } from '@mui/material';
 import React from 'react';
+import Navbar from './Navbar';
 
 function Layout({ children }) {
 	return (
-		<Container
-			sx={{
-				py: 4,
-			}}
-		>
-			{children}
-		</Container>
+		<>
+			<Navbar />
+			<Container
+				sx={{
+					py: 4,
+				}}
+			>
+				{children}
+			</Container>
+		</>
 	);
 }
 

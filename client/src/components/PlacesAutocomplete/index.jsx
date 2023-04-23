@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import usePlacesAutocomplete from 'use-places-autocomplete';
-import { getLocationDetails } from 'utils/helpers';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import parse from 'autosuggest-highlight/parse';
 import {
@@ -12,7 +11,13 @@ import {
 	Typography,
 } from '@mui/material';
 
-function PlacesAutocomplete() {
+function PlacesAutocomplete({
+	types = ['premise', 'street_address'],
+	cacheKey = 'streetAddress',
+	placeholder = 'Start typing address',
+	label = 'Street Address',
+	onChange = () => {},
+}) {
 	const [selectedValue, setSelectedValue] = useState(null);
 
 	const {
@@ -21,25 +26,27 @@ function PlacesAutocomplete() {
 		suggestions: { data, status, loading },
 	} = usePlacesAutocomplete({
 		requestOptions: {
-			types: ['premise', 'street_address'],
+			types,
 			componentRestrictions: { country: ['us'] },
 		},
 		defaultValue: selectedValue?.description ?? '',
+		cacheKey,
 	});
 
 	const handleLocationSelect = async (e, location) => {
 		if (location) {
-			const formattedLocationObj = await getLocationDetails(location);
-			console.log(formattedLocationObj);
+			await onChange(location);
 			setValue(location.description, false);
 			setSelectedValue(location);
 		}
 	};
 
-	const handleInputChange = (event, value) => {
+	const handleInputChange = async (event, value) => {
 		setValue(value);
-		if ((!value || value?.trim() === '') && selectedValue !== null)
+		if ((!value || value?.trim() === '') && selectedValue !== null) {
 			setSelectedValue(null);
+			await onChange(null);
+		}
 	};
 
 	const autoCompleteOptions = useMemo(() => {
@@ -48,9 +55,10 @@ function PlacesAutocomplete() {
 	}, [data, status]);
 
 	return (
-		<Box>
+		<Box sx={{ width: '100%' }}>
 			<FormControl fullWidth>
 				<Autocomplete
+					forcePopupIcon={false}
 					disabled={!ready}
 					loading={loading}
 					autoComplete
@@ -108,11 +116,7 @@ function PlacesAutocomplete() {
 						);
 					}}
 					renderInput={(params) => (
-						<TextField
-							{...params}
-							placeholder="Start typing address"
-							label="Street Address"
-						/>
+						<TextField {...params} placeholder={placeholder} label={label} />
 					)}
 				/>
 			</FormControl>
