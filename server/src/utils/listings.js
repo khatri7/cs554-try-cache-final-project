@@ -27,3 +27,24 @@ export const isValidCreateListingObj = (listingObj) => {
 		location: listingObj.location,
 	};
 };
+
+const isValidLongitude = (lng) =>
+	typeof lng === 'number' && Number.isFinite(lng) && lng <= 180 && lng >= -180;
+const isValidLatitute = (lat) =>
+	typeof lat === 'number' && Number.isFinite(lat) && lat <= 90 && lat >= -90;
+
+export const isValidSearchArea = ({ north, east, south, west }) => {
+	const searchArea = { north, east, south, west };
+	if (typeof north === 'string') searchArea.north = parseFloat(north.trim());
+	if (typeof east === 'string') searchArea.east = parseFloat(east.trim());
+	if (typeof south === 'string') searchArea.south = parseFloat(south.trim());
+	if (typeof west === 'string') searchArea.w = parseFloat(west.trim());
+	if (
+		!isValidLongitude(searchArea.west) ||
+		!isValidLatitute(searchArea.south) ||
+		!isValidLongitude(searchArea.east) ||
+		!isValidLatitute(searchArea.north)
+	)
+		throw badRequestErr('Invalid Search area coordinates');
+	return searchArea;
+};

@@ -9,11 +9,11 @@ import Routes from 'routes';
 
 function App() {
 	return (
-		<Layout>
-			<Router>
+		<Router>
+			<Layout>
 				<Routes />
-			</Router>
-		</Layout>
+			</Layout>
+		</Router>
 	);
 }
 

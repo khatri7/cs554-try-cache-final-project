@@ -27,3 +27,14 @@ export const getLocationDetails = async (location) => {
 	}
 	return false;
 };
+
+export const getSelectedAreaCoordinates = async (location) => {
+	if (location) {
+		const { place_id: placeId } = location;
+		const result = await getDetails({ placeId });
+		const { geometry } = result;
+		const coordinates = JSON.parse(JSON.stringify(geometry?.viewport));
+		return coordinates;
+	}
+	return false;
+};

@@ -15,16 +15,19 @@ const dbConnection = async () => {
 // 	connection?.close();
 // };
 
-const getCollectionFn = (collection) => {
+const getCollectionFn = (collection, onSuccessConnect = () => {}) => {
 	let col;
 	return async () => {
 		if (!col) {
 			const database = await dbConnection();
 			col = await database.collection(collection);
+			await onSuccessConnect(col);
 		}
 		return col;
 	};
 };
 
 export const users = getCollectionFn('users');
-export const listings = getCollectionFn('listings');
+export const listings = getCollectionFn('listings', async (col) => {
+	await col.createIndex({ location: '2dsphere' });
+});

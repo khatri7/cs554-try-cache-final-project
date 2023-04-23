@@ -7,7 +7,10 @@ import {
 	isValidObjectId,
 	notFoundErr,
 } from '../../utils';
-import { isValidCreateListingObj } from '../../utils/listings';
+import {
+	isValidCreateListingObj,
+	isValidSearchArea,
+} from '../../utils/listings';
 import { isValidUserAuthObj } from '../../utils/users';
 
 export const getListingById = async (idParam) => {
@@ -66,4 +69,22 @@ export const createListing = async (listingObjParam, user) => {
 		createListingAck.insertedId.toString()
 	);
 	return createdListing;
+};
+
+export const getListings = async (searchAreaParam) => {
+	const searchArea = isValidSearchArea(searchAreaParam);
+	const listingsCollection = await listings();
+	const listingsArr = await listingsCollection
+		.find({
+			location: {
+				$geoWithin: {
+					$box: [
+						[searchArea.west, searchArea.south],
+						[searchArea.east, searchArea.north],
+					],
+				},
+			},
+		})
+		.toArray();
+	return listingsArr;
 };
