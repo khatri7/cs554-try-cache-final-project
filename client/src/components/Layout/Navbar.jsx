@@ -18,26 +18,8 @@ const pages = [
 ];
 
 function Navbar() {
-	// const [anchorElNav, setAnchorElNav] = React.useState(null);
-	// const [anchorElUser, setAnchorElUser] = React.useState(null);
-
 	const navigate = useNavigate();
 	const location = useLocation();
-
-	// const handleOpenNavMenu = (event) => {
-	// 	setAnchorElNav(event.currentTarget);
-	// };
-	// const handleOpenUserMenu = (event) => {
-	// 	setAnchorElUser(event.currentTarget);
-	// };
-
-	// const handleCloseNavMenu = () => {
-	// 	setAnchorElNav(null);
-	// };
-
-	// const handleCloseUserMenu = () => {
-	// 	setAnchorElUser(null);
-	// };
 
 	return (
 		<AppBar
@@ -97,7 +79,7 @@ function Navbar() {
 								flex: '0 0 auto',
 							}}
 						>
-							<Link to="/projects">
+							<Link to="/">
 								<img
 									src={Logo}
 									alt="Try&Cache"

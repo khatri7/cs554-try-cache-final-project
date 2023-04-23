@@ -33,12 +33,21 @@ const isValidLongitude = (lng) =>
 const isValidLatitute = (lat) =>
 	typeof lat === 'number' && Number.isFinite(lat) && lat <= 90 && lat >= -90;
 
-export const isValidSearchArea = ({ north, east, south, west }) => {
-	const searchArea = { north, east, south, west };
+export const isValidSearchAreaQuery = ({
+	north,
+	east,
+	south,
+	west,
+	placeId,
+	formattedAddress,
+}) => {
+	isValidStr(placeId, 'placeId');
+	isValidStr(formattedAddress, 'formattedAddress');
+	const searchArea = { north, east, south, west, placeId, formattedAddress };
 	if (typeof north === 'string') searchArea.north = parseFloat(north.trim());
 	if (typeof east === 'string') searchArea.east = parseFloat(east.trim());
 	if (typeof south === 'string') searchArea.south = parseFloat(south.trim());
-	if (typeof west === 'string') searchArea.w = parseFloat(west.trim());
+	if (typeof west === 'string') searchArea.west = parseFloat(west.trim());
 	if (
 		!isValidLongitude(searchArea.west) ||
 		!isValidLatitute(searchArea.south) ||

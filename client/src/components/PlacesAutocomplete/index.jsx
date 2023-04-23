@@ -16,7 +16,7 @@ function PlacesAutocomplete({
 	cacheKey = 'streetAddress',
 	placeholder = 'Start typing address',
 	label = 'Street Address',
-	onSelect = () => {},
+	onChange = () => {},
 }) {
 	const [selectedValue, setSelectedValue] = useState(null);
 
@@ -35,16 +35,18 @@ function PlacesAutocomplete({
 
 	const handleLocationSelect = async (e, location) => {
 		if (location) {
-			await onSelect(location);
+			await onChange(location);
 			setValue(location.description, false);
 			setSelectedValue(location);
 		}
 	};
 
-	const handleInputChange = (event, value) => {
+	const handleInputChange = async (event, value) => {
 		setValue(value);
-		if ((!value || value?.trim() === '') && selectedValue !== null)
+		if ((!value || value?.trim() === '') && selectedValue !== null) {
 			setSelectedValue(null);
+			await onChange(null);
+		}
 	};
 
 	const autoCompleteOptions = useMemo(() => {
@@ -56,6 +58,7 @@ function PlacesAutocomplete({
 		<Box sx={{ width: '100%' }}>
 			<FormControl fullWidth>
 				<Autocomplete
+					forcePopupIcon={false}
 					disabled={!ready}
 					loading={loading}
 					autoComplete

@@ -4,7 +4,10 @@ import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
 import { forbiddenErr, successStatusCodes } from '../utils';
 import { createListing, getListings } from '../data/listings';
-import { isValidCreateListingObj, isValidSearchArea } from '../utils/listings';
+import {
+	isValidCreateListingObj,
+	isValidSearchAreaQuery,
+} from '../utils/listings';
 
 const router = express.Router();
 
@@ -26,8 +29,15 @@ router
 	)
 	.get(
 		reqHanlerWrapper(async (req, res) => {
-			const { n, e, s, w } = req.query;
-			const searchArea = isValidSearchArea({ n, e, s, w });
+			const { north, east, south, west, placeId, formattedAddress } = req.query;
+			const searchArea = isValidSearchAreaQuery({
+				north,
+				east,
+				south,
+				west,
+				placeId,
+				formattedAddress,
+			});
 			const listings = await getListings(searchArea);
 			res.json({ listings });
 		})

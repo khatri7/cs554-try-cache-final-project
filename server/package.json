@@ -20,7 +20,8 @@
 		"firebase-admin": "^11.5.0",
 		"jsonwebtoken": "^9.0.0",
 		"moment": "^2.29.4",
-		"mongodb": "^5.2.0"
+		"mongodb": "^5.2.0",
+		"redis": "^4.6.5"
 	},
 	"devDependencies": {
 		"eslint-config-airbnb-base": "^15.0.0"
