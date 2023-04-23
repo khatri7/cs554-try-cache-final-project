@@ -1,7 +1,7 @@
 import express from 'express';
 import authRoutes from './auth';
 import listingRoutes from './listings';
-import applicationRoutes from './application';
+import applicationRoutes from './applications';
 
 const router = express.Router();
 

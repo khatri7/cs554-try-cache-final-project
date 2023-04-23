@@ -16,7 +16,8 @@ export const getApplicationById = async (idParam) => {
 	const application = await applicationsCollection.findOne({
 		_id: new ObjectId(id),
 	});
-	if (!application) throw notFoundErr('No listing found for the provided id');
+	if (!application)
+		throw notFoundErr('No application found for the provided id');
 	return application;
 };
 
@@ -27,13 +28,13 @@ export const createApplication = async (applicationObjParam, user) => {
 			'You cannot create an application if you have registered as a manager'
 		);
 
-	const applicaitonsCollection = await applications();
-	const createApplicationAck = await applicaitonsCollection.insertOne(
+	const applicationsCollection = await applications();
+	const createApplicationAck = await applicationsCollection.insertOne(
 		applicationObjParam
 	);
 
 	if (!createApplicationAck?.acknowledged || !createApplicationAck?.insertedId)
-		throw internalServerErr('Could not create listing. Please try again');
+		throw internalServerErr('Could not create application. Please try again');
 	const createdApplication = await getApplicationById(
 		createApplicationAck.insertedId.toString()
 	);
