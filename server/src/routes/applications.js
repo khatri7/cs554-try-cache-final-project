@@ -15,7 +15,7 @@ router.route('/:id').get(async (req, res) => {
 	let { id } = req.params;
 	id = isValidObjectId(id);
 	const application = await getApplicationById(id);
-	res.status(successStatusCodes.CREATED).json({ application });
+	res.json({ application });
 });
 
 router.route('/').post(
