@@ -61,7 +61,11 @@ export const createListing = async (listingObjParam, user) => {
 		rent,
 		deposit,
 		availabilityDate,
-		location,
+		location: {
+			...location,
+			type: 'Point',
+			coordinates: [location.lng, location.lat],
+		},
 		occupied: false,
 		photos: [],
 	};
