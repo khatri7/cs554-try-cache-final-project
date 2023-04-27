@@ -47,7 +47,7 @@ const checkEmailTaken = async (emailParam) => {
 export const authenticateUser = async (userLoginObjParam) => {
 	const userLoginObj = isValidUserLoginObj(userLoginObjParam);
 	try {
-		const { _id, firstName, lastName, email, role, password } =
+		const { _id, firstName, lastName, email, phone, role, password } =
 			await getUserByEmail(userLoginObj.email);
 		const doPasswordsMatch = await comparePassword(
 			userLoginObj.password,
@@ -62,7 +62,7 @@ export const authenticateUser = async (userLoginObjParam) => {
 			},
 		});
 		return {
-			user: { _id, firstName, lastName, email, role },
+			user: { _id, firstName, lastName, email, role, phone },
 			token,
 		};
 	} catch (e) {

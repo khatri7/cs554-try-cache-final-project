@@ -18,6 +18,8 @@ const rEmail =
 	// eslint-disable-next-line no-useless-escape
 	/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
+const rPhone = /^\d{10}$/;
+
 /**
  *
  * @param {string} emailParam
@@ -123,7 +125,7 @@ const isValidDob = (dateParam) => {
 	const momentDate = isValidDateStr(dateParam, 'DOB');
 	if (!momentDate.isValid()) throw badRequestErr('Invalid DOB');
 	const difference = moment().diff(momentDate, 'year');
-	if (difference < 12 || difference > 100)
+	if (difference < 16 || difference > 100)
 		throw badRequestErr('Invalid DOB: should be between 12-100 years in age');
 	return momentDate.format('MM-DD-YYYY');
 };
@@ -153,6 +155,12 @@ const isValidName = (nameParam, varName, allowPunctuations = false) => {
 	return name;
 };
 
+const isValidPhone = (phoneParam) => {
+	const phone = isValidStr(phoneParam, 'phone');
+	if (!rPhone.test(phone)) throw badRequestErr('Invalid Phone');
+	return phone;
+};
+
 /**
  *
  * @param {object} userObjParam
@@ -166,6 +174,7 @@ export const isValidUserObj = (userObjParam) => {
 		dob: isValidDob(userObjParam.dob),
 		role: isValidUserRole(userObjParam.role),
 		email: isValidEmail(userObjParam.email),
+		phone: isValidPhone(userObjParam.phone),
 		password: isValidPassword(userObjParam.password),
 	};
 };
