@@ -11,10 +11,6 @@ const dbConnection = async () => {
 	return db;
 };
 
-// const closeConnection = () => {
-// 	connection?.close();
-// };
-
 const getCollectionFn = (collection, onSuccessConnect = () => {}) => {
 	let col;
 	return async () => {

@@ -57,3 +57,21 @@ export const isValidSearchAreaQuery = ({
 		throw badRequestErr('Invalid Search area coordinates');
 	return searchArea;
 };
+export const isValidUpdateListingObj = (listingObj) => {
+	if (!isValidObj(listingObj)) throw badRequestErr('Expected a listing object');
+	return {
+		description: listingObj.description
+			? isValidStr(listingObj.description, 'Description')
+			: null,
+		rent: listingObj.rent
+			? isValidNum(listingObj.rent, 'Rent', 'min', 100)
+			: null,
+		deposit: listingObj.deposit
+			? isValidNum(listingObj.deposit, 'Deposit', 'min', 0)
+			: null,
+		availabilityDate: listingObj.availabilityDate
+			? isValidAvailabilityDate(listingObj.availabilityDate)
+			: null,
+		occupied: listingObj.occupied ? listingObj.occupied : null,
+	};
+};
