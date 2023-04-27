@@ -10,6 +10,7 @@ import {
 import {
 	isValidCreateListingObj,
 	isValidSearchAreaQuery,
+	isValidUpdateListingObj,
 } from '../../utils/listings';
 import { isValidUserAuthObj } from '../../utils/users';
 import redis from '../../configs/redis';
@@ -106,4 +107,61 @@ export const getListings = async (searchAreaParam) => {
 		true
 	);
 	return listingsArr;
+};
+
+export const updateListing = async (listingIdParam, user, listingObjParam) => {
+	const id = isValidObjectId(listingIdParam);
+	const validatedUser = isValidUserAuthObj(user);
+	if (validatedUser.role !== 'lessor')
+		throw forbiddenErr('You cannot update a listing if you are not the owner');
+	const { description, rent, deposit, availabilityDate, occupied } =
+		isValidUpdateListingObj(listingObjParam);
+
+	const oldListing = await getListingById(id);
+	if (validatedUser._id !== oldListing.listedBy) {
+		throw forbiddenErr('You cannot update a listing if you are not the owner');
+	}
+	const updateListingObj = {
+		apt: oldListing.apt,
+		description: description || oldListing.description,
+		bedrooms: oldListing.bedrooms,
+		bathrooms: oldListing.bathrooms,
+		rent: rent || oldListing.rent,
+		deposit: deposit || oldListing.deposit,
+		availabilityDate: availabilityDate || oldListing.availabilityDate,
+		location: oldListing.location,
+		occupied: occupied || oldListing.occupied,
+		photos: oldListing.photos,
+	};
+	const listingsCollection = await listings();
+	const updateListingAck = await listingsCollection.findOneAndUpdate(
+		{ _id: new ObjectId(id) },
+		{ $set: updateListingObj },
+		{ returnDocument: 'after' }
+	);
+
+	if (updateListingAck.lastErrorObject.n === 0)
+		throw notFoundErr('Listing Not Found');
+
+	return updateListingAck.value;
+};
+
+export const deleteListing = async (id, user) => {
+	const listingIdParam = isValidObjectId(id);
+	const validatedUser = isValidUserAuthObj(user);
+	if (validatedUser.role !== 'lessor')
+		throw forbiddenErr('You cannot update a listing if you are not the owner');
+
+	const oldListing = await getListingById(id);
+	if (validatedUser._id !== oldListing.listedBy) {
+		throw forbiddenErr('You cannot delete a listing if you are not the owner');
+	}
+	const listingsCollection = await listings();
+	const deletionInfo = await listingsCollection.findOneAndDelete({
+		_id: new ObjectId(listingIdParam),
+	});
+	if (deletionInfo.lastErrorObject.n === 0)
+		throw notFoundErr('Listing Not Found');
+
+	return { listingId: listingIdParam, deleted: true };
 };
