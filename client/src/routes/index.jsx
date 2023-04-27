@@ -8,7 +8,8 @@ function Routes() {
 	return (
 		<RRDRoutes>
 			<Route index element={<Home />} />
-			<Route path="/listings" element={<Listings />}>
+			<Route path="/listings">
+				<Route index element={<Listings />} />
 				<Route path="create" element={<CreateListing />} />
 			</Route>
 		</RRDRoutes>

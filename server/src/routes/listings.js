@@ -3,10 +3,16 @@ import { reqHanlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
 import { forbiddenErr, successStatusCodes } from '../utils';
-import { createListing, getListings } from '../data/listings';
+import {
+	createListing,
+	deleteListing,
+	getListings,
+	updateListing,
+} from '../data/listings';
 import {
 	isValidCreateListingObj,
 	isValidSearchAreaQuery,
+	isValidUpdateListingObj,
 } from '../utils/listings';
 
 const router = express.Router();
@@ -40,6 +46,38 @@ router
 			});
 			const listings = await getListings(searchArea);
 			res.json({ listings });
+		})
+	);
+
+router
+	.route('/:id')
+	.patch(
+		authenticateToken,
+		reqHanlerWrapper(async (req, res) => {
+			const { user } = req;
+			const listingId = req.params.id;
+			const validatedUser = isValidUserAuthObj(user);
+			if (validatedUser.role !== 'lessor')
+				throw forbiddenErr(
+					'You cannot update a listing if you have registered as a tenant'
+				);
+			const listingObj = isValidUpdateListingObj(req.body);
+			const listing = await updateListing(listingId, validatedUser, listingObj);
+			res.status(successStatusCodes.CREATED).json({ listing });
+		})
+	)
+	.delete(
+		authenticateToken,
+		reqHanlerWrapper(async (req, res) => {
+			const { user } = req;
+			const listingId = req.params.id;
+			const validatedUser = isValidUserAuthObj(user);
+			if (validatedUser.role !== 'lessor')
+				throw forbiddenErr(
+					'You cannot update a listing if you have registered as a tenant'
+				);
+			const listing = await deleteListing(listingId, validatedUser);
+			res.status(successStatusCodes.OK).json({ listing });
 		})
 	);
 

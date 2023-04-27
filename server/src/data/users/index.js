@@ -71,6 +71,7 @@ export const authenticateUser = async (userLoginObjParam) => {
 };
 
 export const createUser = async (userObjParam) => {
+	console.log(userObjParam, 'in routes');
 	await checkEmailTaken(userObjParam.email);
 	const userObj = isValidUserObj(userObjParam);
 	const password = await hashPassword(userObj.password);
