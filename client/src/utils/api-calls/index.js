@@ -104,3 +104,11 @@ export const requestTypes = {
 Object.freeze(requestTypes);
 
 export const getListings = (params) => GET('/listings', params);
+
+export const login = (userLoginObj) => POST('/auth/login', userLoginObj);
+
+export const createUser = (user) => POST('/auth/signup', user);
+
+export const initialReq = () => POST('/auth');
+
+export const logout = () => POST('/auth/logout');

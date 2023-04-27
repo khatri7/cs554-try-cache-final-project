@@ -37,6 +37,7 @@ router.route('/').post(async (req, res) => {
 				firstName: dbUser.firstName,
 				lastName: dbUser.lastName,
 				email: dbUser.email,
+				phone: dbUser.phone,
 				role: dbUser.role,
 			},
 		});

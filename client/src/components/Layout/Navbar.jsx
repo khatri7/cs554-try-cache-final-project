@@ -3,11 +3,21 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
-// import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Stack } from '@mui/material';
+import {
+	Avatar,
+	IconButton,
+	Menu,
+	MenuItem,
+	Stack,
+	Typography,
+} from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { handleError, logout } from 'utils/api-calls';
+import { unsetUser } from 'store/user';
+import { errorAlert } from 'store/alert';
 import Logo from './logo.png';
 
 const pages = [
@@ -20,6 +30,24 @@ const pages = [
 function Navbar() {
 	const navigate = useNavigate();
 	const location = useLocation();
+
+	const [anchorElUser, setAnchorElUser] = React.useState(null);
+
+	const user = useSelector((state) => state.user);
+
+	const dispatch = useDispatch();
+
+	const isLoggedIn = React.useMemo(() => {
+		return user !== null;
+	}, [user]);
+
+	const handleOpenUserMenu = (event) => {
+		setAnchorElUser(event.currentTarget);
+	};
+
+	const handleCloseUserMenu = () => {
+		setAnchorElUser(null);
+	};
 
 	return (
 		<AppBar
@@ -90,18 +118,65 @@ function Navbar() {
 							</Link>
 						</Box>
 						{/* User Menu */}
-						<Box>
-							<Button
-								variant="contained"
-								size="large"
-								type="button"
-								startIcon={<LoginOutlinedIcon />}
-								onClick={() => {
-									navigate('/login');
-								}}
-							>
-								LOGIN
-							</Button>
+						<Box sx={{ flexGrow: 0 }}>
+							{isLoggedIn ? (
+								<>
+									<IconButton
+										component="div"
+										onClick={handleOpenUserMenu}
+										sx={{ p: 0 }}
+									>
+										<Avatar
+											alt={`${user.firstName} ${user.lastName}`}
+											src="/broken-image.jpg"
+										/>
+									</IconButton>
+									<Menu
+										sx={{ mt: '45px' }}
+										anchorEl={anchorElUser}
+										anchorOrigin={{
+											vertical: 'top',
+											horizontal: 'right',
+										}}
+										keepMounted
+										transformOrigin={{
+											vertical: 'top',
+											horizontal: 'right',
+										}}
+										open={Boolean(anchorElUser)}
+										onClose={handleCloseUserMenu}
+									>
+										<MenuItem
+											onClick={async () => {
+												handleCloseUserMenu();
+												try {
+													await logout();
+													dispatch(unsetUser());
+												} catch (e) {
+													let error = 'Unexpected error occurred';
+													if (typeof handleError(e) === 'string')
+														error = handleError(e);
+													dispatch(errorAlert(error));
+												}
+											}}
+										>
+											<Typography textAlign="center">Log Out</Typography>
+										</MenuItem>
+									</Menu>
+								</>
+							) : (
+								<Button
+									variant="contained"
+									size="large"
+									type="button"
+									startIcon={<LoginOutlinedIcon />}
+									onClick={() => {
+										navigate('/login');
+									}}
+								>
+									LOGIN
+								</Button>
+							)}
 						</Box>
 					</Stack>
 				</Toolbar>
