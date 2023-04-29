@@ -1,5 +1,14 @@
-import { Card, CardContent, CardMedia, Stack, Typography } from '@mui/material';
+import {
+	Box,
+	Button,
+	Card,
+	CardContent,
+	CardMedia,
+	Stack,
+	Typography,
+} from '@mui/material';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const formatter = new Intl.NumberFormat('en-US', {
 	style: 'currency',
@@ -8,6 +17,7 @@ const formatter = new Intl.NumberFormat('en-US', {
 });
 
 function ListingCard({ listing }) {
+	const navigate = useNavigate();
 	return (
 		<Card>
 			<Stack direction="row">
@@ -20,25 +30,35 @@ function ListingCard({ listing }) {
 						width: '240px',
 					}}
 				/>
-				<CardContent>
-					<Typography gutterBottom variant="h5">
-						{formatter.format(listing.rent)}/mo
-					</Typography>
-					{listing.apt && <Typography>Apt {listing.apt}</Typography>}
-					<Typography gutterBottom>
-						{listing.location?.streetAddress}
-					</Typography>
-					<Typography color="text.secondary">
-						<span style={{ fontWeight: 'bold' }}>{listing.bedrooms}</span> bd |{' '}
-						<span style={{ fontWeight: 'bold' }}>{listing.bathrooms}</span> ba
-						{listing.area && (
-							<>
-								| <span style={{ fontWeight: 'bold' }}>{listing.area}</span>{' '}
-								sqft
-							</>
-						)}
-					</Typography>
-				</CardContent>
+				<Box>
+					<CardContent>
+						<Typography gutterBottom variant="h5">
+							{formatter.format(listing.rent)}/mo
+						</Typography>
+						{listing.apt && <Typography>Apt {listing.apt}</Typography>}
+						<Typography gutterBottom>
+							{listing.location?.streetAddress}
+						</Typography>
+						<Typography color="text.secondary">
+							<span style={{ fontWeight: 'bold' }}>{listing.bedrooms}</span> bd
+							| <span style={{ fontWeight: 'bold' }}>{listing.bathrooms}</span>{' '}
+							ba
+							{listing.area && (
+								<>
+									| <span style={{ fontWeight: 'bold' }}>{listing.area}</span>{' '}
+									sqft
+								</>
+							)}
+						</Typography>
+					</CardContent>
+					<Button
+						onClick={() => {
+							navigate(`/listings/${listing._id}`);
+						}}
+					>
+						View
+					</Button>
+				</Box>
 			</Stack>
 		</Card>
 	);

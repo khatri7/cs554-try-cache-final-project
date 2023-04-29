@@ -187,11 +187,15 @@ export const isValidObj = (obj) =>
 /**
  *
  * @param {string} idParam
+ * @param {string} [varName]
  * @returns {string} the object id string if it is valid otherwise throws an error
  */
-export const isValidObjectId = (idParam) => {
-	const id = isValidStr(idParam, 'Id');
-	if (!ObjectId.isValid(id)) throw badRequestErr('Invalid Object Id');
+export const isValidObjectId = (idParam, varName) => {
+	const id = isValidStr(idParam, varName || 'Id');
+	if (!ObjectId.isValid(id)) {
+		if (varName) throw badRequestErr(`Invalid ${varName}`);
+		else throw badRequestErr('Invalid Object Id');
+	}
 	return id;
 };
 

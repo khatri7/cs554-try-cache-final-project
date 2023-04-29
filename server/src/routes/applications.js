@@ -6,6 +6,7 @@ import { isValidUserAuthObj } from '../utils/users';
 import { forbiddenErr, isValidObjectId, successStatusCodes } from '../utils';
 import { createApplication, getApplicationById } from '../data/applications';
 import { isValidCreateApplicationObj } from '../utils/applications';
+import uploadMedia from '../middlewares/uploadMedia';
 
 const router = express.Router();
 
@@ -20,16 +21,21 @@ router.route('/:id').get(async (req, res) => {
 
 router.route('/').post(
 	authenticateToken,
+	uploadMedia('document'),
 	reqHanlerWrapper(async (req, res) => {
 		// Create application by referencing the ID of the Property and the User ID
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		if (validatedUser.role !== 'tenant')
 			throw forbiddenErr(
-				'You cannot create an Application if you have registered as a tenant'
+				'You cannot create an Application if you have registered as a lessor'
 			);
 		const appliObj = isValidCreateApplicationObj(req.body);
-		const application = await createApplication(appliObj, validatedUser);
+		const application = await createApplication(
+			appliObj,
+			validatedUser,
+			req.file
+		);
 		res.status(successStatusCodes.CREATED).json({ application });
 	})
 );

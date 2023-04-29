@@ -54,7 +54,7 @@ export const createListing = async (listingObjParam, user) => {
 	} = isValidCreateListingObj(listingObjParam);
 	await checkListingExists(location);
 	const listingObj = {
-		listedBy: user._id,
+		listedBy: new ObjectId(user._id),
 		apt,
 		description,
 		bedrooms,
@@ -118,7 +118,7 @@ export const updateListing = async (listingIdParam, user, listingObjParam) => {
 		isValidUpdateListingObj(listingObjParam);
 
 	const oldListing = await getListingById(id);
-	if (validatedUser._id !== oldListing.listedBy) {
+	if (validatedUser._id !== oldListing.listedBy.toString()) {
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 	}
 	const updateListingObj = {
@@ -153,7 +153,7 @@ export const deleteListing = async (id, user) => {
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 
 	const oldListing = await getListingById(id);
-	if (validatedUser._id !== oldListing.listedBy) {
+	if (validatedUser._id !== oldListing.listedBy.toString()) {
 		throw forbiddenErr('You cannot delete a listing if you are not the owner');
 	}
 	const listingsCollection = await listings();
