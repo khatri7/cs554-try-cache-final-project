@@ -58,6 +58,8 @@ export const createApplication = async (
 	let document = null;
 	const applicationId = new ObjectId();
 	if (documentParam) {
+		if (documentParam.mimetype !== 'application/pdf')
+			throw badRequestErr('Please upload a single merged document of type PDF');
 		const docKey = `applications/${applicationId.toString()}/${
 			applicationStatus.REVIEW
 		}/${documentParam.originalname}`;
