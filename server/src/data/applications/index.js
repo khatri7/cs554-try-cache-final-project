@@ -178,7 +178,7 @@ export const approveApplication = async (applicationId, text, user) => {
 	}
 	// const ApproveObj = { text };
 	const noteObj = application.notes;
-	noteObj[applicationStatus.APP] = { text };
+	noteObj[applicationStatus.APPROVED] = { text };
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
 		{ $set: { status: applicationStatus.APPROVED, notes: noteObj } }
