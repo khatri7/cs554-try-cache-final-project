@@ -26,7 +26,7 @@ export const getApplicationById = async (idParam, currUser) => {
 	if (!application)
 		throw notFoundErr('No application found for the provided id');
 	if (
-		application.listing?.listedBy?.toString() !== validatedUser._id ||
+		application.listing?.listedBy?.toString() !== validatedUser._id &&
 		application.tenant?._id?.toString() !== validatedUser._id
 	)
 		throw forbiddenErr('You are not allowed to view this application');
@@ -113,7 +113,8 @@ export const createApplication = async (
 	if (!createApplicationAck?.acknowledged || !createApplicationAck?.insertedId)
 		throw internalServerErr('Could not create application. Please try again');
 	const createdApplication = await getApplicationById(
-		createApplicationAck.insertedId.toString()
+		createApplicationAck.insertedId.toString(),
+		validatedUser
 	);
 	return createdApplication;
 };
