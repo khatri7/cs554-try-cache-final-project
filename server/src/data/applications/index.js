@@ -6,6 +6,7 @@ import {
 	internalServerErr,
 	isValidObjectId,
 	notFoundErr,
+	unauthorizedErr,
 } from '../../utils';
 import { isValidUserAuthObj } from '../../utils/users';
 import {
@@ -119,6 +120,34 @@ export const createApplication = async (
 	return createdApplication;
 };
 
+export const rejectapplication = async (ApplicationId, user) => {
+	const validatedUser = isValidUserAuthObj(user);
+	if (validatedUser.role !== 'lessor')
+		throw forbiddenErr(
+			'You cannot udpate this application if you have registered as a tenant'
+		);
+	const applicationCollection = await applications();
+	const application = await getApplicationById(ApplicationId, validatedUser);
+
+	if (application.listing.listedBy !== user.id) {
+		unauthorizedErr('incorrect User accessing the application');
+	}
+
+	const applicationAck = await applicationCollection.updateOne(
+		{ _id: application._id },
+		{ $set: { status: applicationStatus.DECLINED } }
+	);
+	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
+		throw internalServerErr(
+			'Could not bookmark the Application. Please try again.'
+		);
+	const applicationUpdate = await getApplicationById(
+		ApplicationId,
+		validatedUser
+	);
+	return applicationUpdate;
+};
+
 export const getUserApplications = async (currUser) => {
 	const validatedUser = isValidUserAuthObj(currUser);
 	const applicationsCollection = await applications();
@@ -130,4 +159,37 @@ export const getUserApplications = async (currUser) => {
 		})
 		.toArray();
 	return applicationsArr;
+};
+
+export const approveApplication = async (applicationId, text, user) => {
+	const validatedUser = isValidUserAuthObj(user);
+
+	if (validatedUser.role !== 'lessor')
+		throw forbiddenErr(
+			'You cannot udpate this application if you have registered as a tenant'
+		);
+
+	const applicationCollection = await applications();
+
+	const application = await getApplicationById(applicationId, validatedUser);
+
+	if (application.listing.listedBy !== user.id) {
+		unauthorizedErr('incorrect User accessing the application');
+	}
+	// const ApproveObj = { text };
+	const noteObj = application.notes;
+	noteObj[applicationStatus.APP] = { text };
+	const applicationAck = await applicationCollection.updateOne(
+		{ _id: application._id },
+		{ $set: { status: applicationStatus.APPROVED, notes: noteObj } }
+	);
+	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
+		throw internalServerErr(
+			'Could not Update the Application. Please try again.'
+		);
+	const applicationUpdate = await getApplicationById(
+		applicationId,
+		validatedUser
+	);
+	return applicationUpdate;
 };
