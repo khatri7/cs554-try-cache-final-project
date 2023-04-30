@@ -26,12 +26,11 @@ export const getApplicationById = async (idParam, currUser) => {
 	});
 	if (!application)
 		throw notFoundErr('No application found for the provided id');
-
-	// if (
-	// 	application.listing?.listedBy?.toString() !== validatedUser._id ||
-	// 	application.tenant?._id?.toString() !== validatedUser._id
-	// )
-	// 	throw forbiddenErr('You are not allowed to view this application');
+	if (
+		application.listing?.listedBy?.toString() !== validatedUser._id ||
+		application.tenant?._id?.toString() !== validatedUser._id
+	)
+		throw forbiddenErr('You are not allowed to view this application');
 	return application;
 };
 
