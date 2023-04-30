@@ -26,8 +26,8 @@ export const getApplicationById = async (idParam, currUser) => {
 	if (!application)
 		throw notFoundErr('No application found for the provided id');
 	if (
-		application.listedBy.toString() !== validatedUser._id ||
-		application.tenant._id.toString() !== validatedUser._id
+		application.listing?.listedBy?.toString() !== validatedUser._id ||
+		application.tenant?._id?.toString() !== validatedUser._id
 	)
 		throw forbiddenErr('You are not allowed to view this application');
 	return application;
@@ -36,7 +36,7 @@ export const getApplicationById = async (idParam, currUser) => {
 const checkApplicationExists = async (tenantId, listingId) => {
 	const applicationsCollection = await applications();
 	const application = await applicationsCollection.findOne({
-		listingId: new ObjectId(listingId),
+		'listing._id': new ObjectId(listingId),
 		'tenant._id': new ObjectId(tenantId),
 	});
 	if (!application) return false;
@@ -57,7 +57,11 @@ export const createApplication = async (
 		validatedUser._id
 	);
 	const { listingId, notes } = isValidCreateApplicationObj(applicationObjParam);
-	const { listedBy } = await getListingById(listingId);
+	const {
+		listedBy,
+		apt,
+		location: { streetAddress },
+	} = await getListingById(listingId);
 	if (await checkApplicationExists(validatedUser._id, listingId))
 		throw badRequestErr('You already have an application for this listing');
 	const now = new Date();
@@ -77,8 +81,12 @@ export const createApplication = async (
 	}
 	const newApplicationObj = {
 		_id: applicationId,
-		listingId: new ObjectId(listingId),
-		listedBy,
+		listing: {
+			_id: new ObjectId(listingId),
+			streetAddress,
+			apt,
+			listedBy,
+		},
 		lease: null,
 		createdAt: now,
 		updatedAt: now,
@@ -113,7 +121,7 @@ export const createApplication = async (
 export const getUserApplications = async (currUser) => {
 	const validatedUser = isValidUserAuthObj(currUser);
 	const applicationsCollection = await applications();
-	let filterKey = 'listedBy';
+	let filterKey = 'listing.listedBy';
 	if (validatedUser.role === 'tenant') filterKey = 'tenant._id';
 	const applicationsArr = await applicationsCollection
 		.find({
