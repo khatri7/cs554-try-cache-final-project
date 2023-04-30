@@ -4,20 +4,37 @@ import { reqHanlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
 import { forbiddenErr, isValidObjectId, successStatusCodes } from '../utils';
-import { createApplication, getApplicationById } from '../data/applications';
+import {
+	createApplication,
+	getApplicationById,
+	getUserApplications,
+} from '../data/applications';
 import { isValidCreateApplicationObj } from '../utils/applications';
 import uploadMedia from '../middlewares/uploadMedia';
 
 const router = express.Router();
 
-router.route('/:id').get(async (req, res) => {
-	// Using ID of application fetch the record
-	// Also fetch relevant property and user information of the application.
-	let { id } = req.params;
-	id = isValidObjectId(id);
-	const application = await getApplicationById(id);
-	res.json({ application });
-});
+router.route('/my-applications').get(
+	authenticateToken,
+	reqHanlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		const applications = await getUserApplications(validatedUser);
+		res.json({ applications });
+	})
+);
+
+router.route('/:id').get(
+	authenticateToken,
+	reqHanlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		let { id } = req.params;
+		id = isValidObjectId(id);
+		const application = await getApplicationById(id, validatedUser);
+		res.json({ application });
+	})
+);
 
 router.route('/').post(
 	authenticateToken,

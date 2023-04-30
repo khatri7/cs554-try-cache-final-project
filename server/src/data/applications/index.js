@@ -16,14 +16,20 @@ import { getListingById } from '../listings';
 import { getUserById } from '../users';
 import { upload } from '../../configs/awsS3';
 
-export const getApplicationById = async (idParam) => {
+export const getApplicationById = async (idParam, currUser) => {
 	const id = isValidObjectId(idParam);
+	const validatedUser = isValidUserAuthObj(currUser);
 	const applicationsCollection = await applications();
 	const application = await applicationsCollection.findOne({
 		_id: new ObjectId(id),
 	});
 	if (!application)
 		throw notFoundErr('No application found for the provided id');
+	if (
+		application.listedBy.toString() !== validatedUser._id ||
+		application.tenant._id.toString() !== validatedUser._id
+	)
+		throw forbiddenErr('You are not allowed to view this application');
 	return application;
 };
 
@@ -73,6 +79,7 @@ export const createApplication = async (
 		_id: applicationId,
 		listingId: new ObjectId(listingId),
 		listedBy,
+		lease: null,
 		createdAt: now,
 		updatedAt: now,
 		status: applicationStatus.REVIEW,
@@ -101,4 +108,17 @@ export const createApplication = async (
 		createApplicationAck.insertedId.toString()
 	);
 	return createdApplication;
+};
+
+export const getUserApplications = async (currUser) => {
+	const validatedUser = isValidUserAuthObj(currUser);
+	const applicationsCollection = await applications();
+	let filterKey = 'listedBy';
+	if (validatedUser.role === 'tenant') filterKey = 'tenant._id';
+	const applicationsArr = await applicationsCollection
+		.find({
+			[filterKey]: new ObjectId(validatedUser._id),
+		})
+		.toArray();
+	return applicationsArr;
 };
