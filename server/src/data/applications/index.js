@@ -153,11 +153,13 @@ export const getUserApplications = async (currUser) => {
 	const applicationsCollection = await applications();
 	let filterKey = 'listing.listedBy';
 	if (validatedUser.role === 'tenant') filterKey = 'tenant._id';
+	console.log('filter', filterKey);
 	const applicationsArr = await applicationsCollection
 		.find({
 			[filterKey]: new ObjectId(validatedUser._id),
 		})
 		.toArray();
+	console.log(applicationsArr, 'asdf');
 	return applicationsArr;
 };
 

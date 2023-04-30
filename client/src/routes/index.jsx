@@ -5,6 +5,7 @@ import Listings from 'pages/Listings';
 import Login from 'pages/Login';
 import Signup from 'pages/Signup';
 import SingleListing from 'pages/SingleListing';
+import Dashboard from 'pages/Dashboard';
 import React from 'react';
 import { Routes as RRDRoutes, Route } from 'react-router-dom';
 
@@ -14,6 +15,7 @@ function Routes() {
 			<Route index element={<Home />} />
 			<Route path="/login" element={<Login />} />
 			<Route path="/signup" element={<Signup />} />
+			<Route path="/dashboard" element={<Dashboard />} />
 			<Route path="/listings">
 				<Route index element={<Listings />} />
 				<Route path="create" element={<CreateListing />} />

@@ -105,6 +105,10 @@ Object.freeze(requestTypes);
 
 export const getListings = (params) => GET('/listings', params);
 
+export const getAllListings = () => GET('/listings/mylistings');
+
+export const getMyApplications = () => GET('applications/my-applications');
+
 export const login = (userLoginObj) => POST('/auth/login', userLoginObj);
 
 export const createUser = (user) => POST('/auth/signup', user);
