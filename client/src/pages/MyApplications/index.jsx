@@ -55,7 +55,7 @@ function MyApplications() {
 				</TableHead>
 				<TableBody>
 					{(data.applications || []).map((application) => (
-						<TableRow>
+						<TableRow key={application._id}>
 							<TableCell>
 								<Typography>{application.listing?.streetAddress}</Typography>
 								{application.listing?.apt && (
