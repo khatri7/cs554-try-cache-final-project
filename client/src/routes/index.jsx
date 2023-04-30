@@ -3,6 +3,7 @@ import CreateListing from 'pages/CreateListing';
 import Home from 'pages/Home';
 import Listings from 'pages/Listings';
 import Login from 'pages/Login';
+import MyApplications from 'pages/MyApplications';
 import Signup from 'pages/Signup';
 import SingleListing from 'pages/SingleListing';
 import React from 'react';
@@ -22,6 +23,7 @@ function Routes() {
 					<Route path="application" element={<Application />} />
 				</Route>
 			</Route>
+			<Route path="/my-applications" element={<MyApplications />} />
 		</RRDRoutes>
 	);
 }

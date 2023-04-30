@@ -50,7 +50,7 @@ function Listings() {
 					Currently there are no listings in the selected area
 				</Typography>
 			)}
-			<Stack>
+			<Stack gap={4}>
 				{listings.map((listing) => (
 					<ListingCard key={listing._id} listing={listing} />
 				))}
