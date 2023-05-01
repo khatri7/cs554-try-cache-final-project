@@ -8,6 +8,7 @@ import {
 	deleteListing,
 	getListings,
 	updateListing,
+	getAllListings,
 } from '../data/listings';
 import {
 	isValidCreateListingObj,
@@ -80,5 +81,19 @@ router
 			res.status(successStatusCodes.OK).json({ listing });
 		})
 	);
+
+router.route('/mylistings').get(
+	authenticateToken,
+	reqHanlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		if (validatedUser.role !== 'lessor')
+			throw forbiddenErr(
+				'You cannot view your listings if you have registered as a tenant'
+			);
+		const listings = await getAllListings(validatedUser);
+		res.json({ listings });
+	})
+);
 
 export default router;

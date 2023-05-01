@@ -165,3 +165,15 @@ export const deleteListing = async (id, user) => {
 
 	return { listingId: listingIdParam, deleted: true };
 };
+
+export const getAllListings = async (user) => {
+	if (user.role !== 'lessor')
+		throw forbiddenErr(
+			'You cannot display listings if you have registered as a tenant'
+		);
+	const listingsCollection = await listings();
+	const listingsArr = await listingsCollection
+		.find({ listedBy: new ObjectId(user._id) })
+		.toArray();
+	return listingsArr;
+};
