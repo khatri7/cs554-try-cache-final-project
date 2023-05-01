@@ -163,7 +163,12 @@ export const getUserApplications = async (currUser) => {
 	return applicationsArr;
 };
 
-export const approveApplication = async (applicationId, text, user) => {
+export const approveApplication = async (
+	applicationId,
+	text,
+	user,
+	leaseParam
+) => {
 	const validatedUser = isValidUserAuthObj(user);
 
 	if (validatedUser.role !== 'lessor')
@@ -175,15 +180,29 @@ export const approveApplication = async (applicationId, text, user) => {
 
 	const application = await getApplicationById(applicationId, validatedUser);
 
-	if (application.listing.listedBy !== user.id) {
+	if (application.listing.listedBy.toString() !== validatedUser.id) {
 		unauthorizedErr('incorrect User accessing the application');
 	}
-	// const ApproveObj = { text };
 	const noteObj = application.notes;
-	noteObj[applicationStatus.APP] = { text };
+	noteObj[applicationStatus.APPROVED] = { text };
+	const updatedAt = new Date();
+	if (!leaseParam) throw badRequestErr('Lease is required');
+	if (leaseParam.mimetype !== 'application/pdf')
+		throw badRequestErr('Lease has to be of type PDF');
+	const docKey = `applications/${applicationId.toString()}/lease/${
+		leaseParam.originalname
+	}`;
+	const lease = await upload(docKey, leaseParam.buffer, leaseParam.mimetype);
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
-		{ $set: { status: applicationStatus.APPROVED, notes: noteObj } }
+		{
+			$set: {
+				status: applicationStatus.APPROVED,
+				updatedAt,
+				lease,
+				notes: noteObj,
+			},
+		}
 	);
 	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
 		throw internalServerErr(

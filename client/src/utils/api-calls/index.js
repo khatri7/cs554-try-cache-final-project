@@ -116,3 +116,16 @@ export const createUser = (user) => POST('/auth/signup', user);
 export const initialReq = () => POST('/auth');
 
 export const logout = () => POST('/auth/logout');
+
+export const createApplication = (applicationBody) => {
+	const formData = new FormData();
+	Object.entries(applicationBody).forEach((item) => {
+		formData.append(item[0], item[1]);
+	});
+	return POST(
+		'/applications',
+		formData,
+		{},
+		{ 'Content-Type': 'multipart/form-data' }
+	);
+};

@@ -149,6 +149,16 @@ function Navbar() {
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
+												navigate('/my-applications');
+											}}
+										>
+											<Typography textAlign="center">
+												My Applications
+											</Typography>
+										</MenuItem>
+										<MenuItem
+											onClick={async () => {
+												handleCloseUserMenu();
 												try {
 													await logout();
 													dispatch(unsetUser());

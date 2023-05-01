@@ -1,59 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Stack, Typography, Tab } from '@mui/material';
-import { getAllListings, getMyApplications } from 'utils/api-calls';
 import ListingCard from 'components/ListingCard';
-import ApplicationCard from 'components/ApplicationCard';
+import ViewAllApplications from 'components/ViewAllApplications';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
+import useQuery from 'hooks/useQuery';
 
 function Dashboard() {
-	const [loading, setLoading] = useState(false);
+	const listingArray = useQuery('/listings/mylistings');
+	const applicationArray = useQuery('/applications/my-applications');
+	const [loadingListings, setLoadingListings] = useState(false);
+	const [errorListings, setErrorListings] = useState(false);
 	const [listings, setListings] = useState([]);
+	const [loadingApplications, setLoadingApplications] = useState(false);
+	const [errorApplications, setErrorApplications] = useState(false);
 	const [applications, setApplications] = useState([]);
 	const [value, setValue] = useState('1');
 
-	// useEffect(() => {
-	// 	try {
-	// 		setLoading(true);
-	// 		console.log('here');
-	// 		const listingsArr = getAllListings();
-	// 		console.log(listingsArr);
-	// 		setListings(listingsArr.listings);
-	// 	} catch (e) {
-	// 		console.error(e);
-	// 	} finally {
-	// 		setLoading(false);
-	// 	}
-	// }, []);
+	useEffect(() => {
+		console.log('called here', listingArray);
+		setLoadingListings(listingArray.loading);
+		setErrorListings(listingArray.error);
+		setListings(listingArray.data?.listings);
+	}, [listingArray]);
+
+	useEffect(() => {
+		console.log('called here 2', applicationArray);
+		setLoadingApplications(applicationArray.loading);
+		setErrorApplications(applicationArray.error);
+		setApplications(applicationArray.data?.applications);
+	}, [applicationArray]);
 
 	const handleChange = async (event, newValue) => {
-		console.log('called', newValue);
-		if (newValue === '1') {
-			try {
-				setLoading(true);
-				console.log('here');
-				const listingsArr = await getAllListings();
-				console.log(listingsArr);
-				setListings(listingsArr.listings);
-			} catch (e) {
-				console.error(e);
-			} finally {
-				setLoading(false);
-			}
-		} else if (newValue === '2') {
-			try {
-				setLoading(true);
-				console.log('here');
-				const applicationsArr = await getMyApplications();
-				console.log(applicationsArr);
-				setApplications(applicationsArr.applications);
-			} catch (e) {
-				console.error(e);
-			} finally {
-				setLoading(false);
-			}
-		}
+		console.log('called', newValue, listings);
+		console.log('listings', loadingListings, errorListings, listings);
 		setValue(newValue);
 	};
 
@@ -67,32 +48,36 @@ function Dashboard() {
 					</TabList>
 				</Box>
 				<TabPanel value="1">
-					{loading && <Typography>Loading...</Typography>}
-					{!loading && listings.length === 0 && (
+					{errorListings && <Typography>Error: {errorListings}</Typography>}
+					{loadingListings && <Typography>Loading...</Typography>}
+					{!loadingListings && listings?.length === 0 && (
 						<Typography>
 							Currently there are no listings that you have posted
 						</Typography>
 					)}
-					{!loading && (
+					{!loadingListings && (
 						<Stack>
-							{listings.map((listing) => (
+							{listings?.map((listing) => (
 								<ListingCard key={listing._id} listing={listing} />
 							))}
 						</Stack>
 					)}
 				</TabPanel>
 				<TabPanel value="2">
-					{loading && <Typography>Loading...</Typography>}
-					{!loading && listings.length === 0 && (
+					{errorApplications && (
+						<Typography>Error: {errorApplications}</Typography>
+					)}
+					{loadingApplications && <Typography>Loading...</Typography>}
+					{!loadingApplications && listings?.length === 0 && (
 						<Typography>
 							Currently there are no applications for the properties that you
 							have listed.
 						</Typography>
 					)}
-					{!loading && (
+					{!loadingApplications && (
 						<Stack>
-							{applications.map((application) => (
-								<ApplicationCard
+							{applications?.map((application) => (
+								<ViewAllApplications
 									key={application._id}
 									application={application}
 								/>

@@ -85,20 +85,28 @@ router.route('/lessor/reject/:id').post(
 	})
 );
 
-router.route('/lessor/approve/:id').post(
+router.route('/:id/lessor/approve').post(
 	authenticateToken,
+	uploadMedia('lease'),
 	reqHanlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
-		let { id, text } = req.params;
+		let { id } = req.params;
 		id = isValidObjectId(id);
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
-		text = isValidStr(req.body.text, 'parameter text');
+		const text = req.body.text
+			? isValidStr(req.body.text, 'parameter text')
+			: '';
 		if (validatedUser.role !== 'lessor')
 			throw forbiddenErr(
 				'You cannot update an Application if are logged in as Tenant'
 			);
-		const application = await approveApplication(id, text, validatedUser);
+		const application = await approveApplication(
+			id,
+			text,
+			validatedUser,
+			req.file
+		);
 
 		res.status(successStatusCodes.CREATED).json({ application });
 	})

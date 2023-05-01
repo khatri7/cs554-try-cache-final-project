@@ -19,7 +19,7 @@ const formatter = new Intl.NumberFormat('en-US', {
 function ListingCard({ listing }) {
 	const navigate = useNavigate();
 	return (
-		<Card>
+		<Card raised>
 			<Stack direction="row">
 				<CardMedia
 					component="img"
