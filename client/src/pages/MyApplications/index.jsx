@@ -13,6 +13,7 @@ import {
 import useQuery from 'hooks/useQuery';
 import moment from 'moment';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const tableHeaders = ['Listing', 'Applied', 'Last Updated', 'Status', ''];
 
@@ -25,6 +26,8 @@ const chipColor = {
 
 function MyApplications() {
 	const { loading, error, data } = useQuery('/applications/my-applications');
+
+	const navigate = useNavigate();
 
 	if (loading) return <Typography>Loading...</Typography>;
 
@@ -80,7 +83,14 @@ function MyApplications() {
 								/>
 							</TableCell>
 							<TableCell>
-								<Button endIcon={<OpenInNew />}>View</Button>
+								<Button
+									onClick={() => {
+										navigate(`/applications/${application._id}`);
+									}}
+									endIcon={<OpenInNew />}
+								>
+									View
+								</Button>
 							</TableCell>
 						</TableRow>
 					))}
