@@ -118,3 +118,33 @@ export const autoLogin = async (dispatch) => {
 		dispatch(initializeApp());
 	}
 };
+
+export const isValidDescription = (str) => {
+	if (!str) return false;
+	if (typeof str !== 'string') return false;
+	if (str.trim().length === 0) return false;
+	if (str.length > 500) return false;
+	return true;
+};
+
+export const isValidBedBath = (num) => {
+	if (!num) return false;
+	if (typeof num !== 'number') return false;
+	if (num < 1 || num > 20) return false;
+	if (!/^\d+$/.test(num)) return false;
+	return true;
+};
+
+export const isValidRentDeposit = (num) => {
+	if (!num) return false;
+	if (typeof num !== 'number') return false;
+	if (!/^\d+$/.test(num)) return false;
+	return true;
+};
+
+export const isValidApt = (num) => {
+	if (!num) return false;
+	if (typeof num !== 'number') return false;
+	if (!/^\d+$/.test(num)) return false;
+	return true;
+};

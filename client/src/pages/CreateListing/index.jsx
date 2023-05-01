@@ -1,6 +1,13 @@
 import PlacesAutocomplete from 'components/PlacesAutocomplete';
 import React, { useState } from 'react';
-import { getLocationDetails } from 'utils/helpers';
+import {
+	getLocationDetails,
+	isValidApt,
+	isValidBedBath,
+	isValidDateStr,
+	isValidDescription,
+	isValidRentDeposit,
+} from 'utils/helpers';
 import { Box, Button, TextField, FormControl } from '@mui/material';
 import { POST, handleError } from 'utils/api-calls';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -28,7 +35,7 @@ function CreateListing() {
 
 	const handleChange = (event) => {
 		const { name, value, type } = event.target;
-
+		setIsDisabled(false);
 		setFormValues({
 			...formValues,
 			[name]: type === 'number' ? parseInt(value, 10) : value,
@@ -39,6 +46,22 @@ function CreateListing() {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
+			const {
+				apt,
+				description,
+				bedrooms,
+				bathrooms,
+				rent,
+				deposit,
+				availabilityDate,
+			} = formValues;
+			isValidDateStr(availabilityDate);
+			isValidDescription(description);
+			isValidApt(apt);
+			isValidBedBath(bedrooms);
+			isValidBedBath(bathrooms);
+			isValidRentDeposit(rent);
+			isValidRentDeposit(deposit);
 			const res = await POST('/listings', formValues);
 			if (res && res.listing._id) {
 				navigate(`/listings/${res.listing._id}`);
@@ -82,7 +105,6 @@ function CreateListing() {
 							onChange={handleChange}
 						/>
 						<TextField
-							required
 							name="description"
 							label="Description"
 							value={formValues.description}
