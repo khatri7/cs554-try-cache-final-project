@@ -156,6 +156,16 @@ function Navbar() {
 												My Applications
 											</Typography>
 										</MenuItem>
+
+										<MenuItem
+											onClick={async () => {
+												handleCloseUserMenu();
+												navigate('/dashboard');
+											}}
+										>
+											<Typography textAlign="center">View Dashboard</Typography>
+										</MenuItem>
+
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
