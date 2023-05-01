@@ -16,10 +16,11 @@ import {
 	getApplicationById,
 	getUserApplications,
 	rejectapplication,
+	completeApplication,
 } from '../data/applications';
 
 import { isValidCreateApplicationObj } from '../utils/applications';
-import uploadMedia from '../middlewares/uploadMedia';
+import { uploadMedia, uploadMedias } from '../middlewares/uploadMedia';
 
 const router = express.Router();
 
@@ -66,7 +67,7 @@ router.route('/').post(
 	})
 );
 
-router.route('/lessor/reject/:id').post(
+router.route('/:id/lessor/reject').post(
 	authenticateToken,
 	reqHanlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
@@ -106,6 +107,31 @@ router.route('/:id/lessor/approve').post(
 			text,
 			validatedUser,
 			req.file
+		);
+
+		res.status(successStatusCodes.CREATED).json({ application });
+	})
+);
+
+router.route('/:id/tenant/complete').post(
+	authenticateToken,
+	uploadMedias('documents'),
+	reqHanlerWrapper(async (req, res) => {
+		// update application by referencing the ID of the Property and the User ID
+		let { id } = req.params;
+		id = isValidObjectId(id);
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		const text = req.body.text
+			? isValidStr(req.body.text, 'parameter text')
+			: '';
+		if (validatedUser.role !== 'tenant')
+			throw forbiddenErr('You cannot update this information as Lessor.');
+		const application = await completeApplication(
+			id,
+			text,
+			validatedUser,
+			req.files
 		);
 
 		res.status(successStatusCodes.CREATED).json({ application });
