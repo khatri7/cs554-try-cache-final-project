@@ -212,3 +212,58 @@ export const approveApplication = async (
 	);
 	return applicationUpdate;
 };
+
+export const completeApplication = async (
+	applicationId,
+	text,
+	user,
+	documents
+) => {
+	const validatedUser = isValidUserAuthObj(user);
+
+	if (validatedUser.role !== 'tenant')
+		throw forbiddenErr('You cannot update this information as Lessor');
+
+	const applicationCollection = await applications();
+
+	const application = await getApplicationById(applicationId, validatedUser);
+
+	if (application.listing.listedBy.toString() !== validatedUser.id) {
+		unauthorizedErr('incorrect User accessing the application');
+	}
+
+	const noteObj = application.notes;
+	const updatedAt = new Date();
+	if (!documents) throw badRequestErr('Lease is required');
+	const docsUrl = [];
+	await Promise.all(
+		documents.map(async (document) => {
+			if (document.mimetype !== 'application/pdf')
+				throw badRequestErr('Lease has to be of type PDF');
+			const docKey = `applications/${applicationId.toString()}/COMPLETED/${
+				document.originalname
+			}`;
+			docsUrl.push(await upload(docKey, document.buffer, document.mimetype));
+		})
+	);
+	noteObj[applicationStatus.COMPLETED] = { text, documents: docsUrl };
+	const applicationAck = await applicationCollection.updateOne(
+		{ _id: application._id },
+		{
+			$set: {
+				status: applicationStatus.COMPLETED,
+				updatedAt,
+				notes: noteObj,
+			},
+		}
+	);
+	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
+		throw internalServerErr(
+			'Could not Update the Application. Please try again.'
+		);
+	const applicationUpdate = await getApplicationById(
+		applicationId,
+		validatedUser
+	);
+	return applicationUpdate;
+};

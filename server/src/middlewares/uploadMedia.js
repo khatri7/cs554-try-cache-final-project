@@ -2,7 +2,7 @@ import multer from 'multer';
 
 const FIVE_MB = 1024 * 1024 * 5;
 
-const uploadMedia = (field) => {
+export const uploadMedia = (field) => {
 	const upload = multer({
 		limits: {
 			fileSize: FIVE_MB,
@@ -16,4 +16,16 @@ const uploadMedia = (field) => {
 	};
 };
 
-export default uploadMedia;
+export const uploadMedias = (field) => {
+	const upload = multer({
+		limits: {
+			fileSize: FIVE_MB,
+		},
+	}).array(field || 'file', 5);
+	return (req, res, next) => {
+		upload(req, res, (err) => {
+			if (err) res.status(400).json({ message: err.message });
+			else next();
+		});
+	};
+};
