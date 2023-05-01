@@ -19,22 +19,18 @@ function Dashboard() {
 	const [value, setValue] = useState('1');
 
 	useEffect(() => {
-		console.log('called here', listingArray);
 		setLoadingListings(listingArray.loading);
 		setErrorListings(listingArray.error);
 		setListings(listingArray.data?.listings);
 	}, [listingArray]);
 
 	useEffect(() => {
-		console.log('called here 2', applicationArray);
 		setLoadingApplications(applicationArray.loading);
 		setErrorApplications(applicationArray.error);
 		setApplications(applicationArray.data?.applications);
 	}, [applicationArray]);
 
 	const handleChange = async (event, newValue) => {
-		console.log('called', newValue, listings);
-		console.log('listings', loadingListings, errorListings, listings);
 		setValue(newValue);
 	};
 

@@ -85,7 +85,6 @@ router
 router.route('/mylistings').get(
 	authenticateToken,
 	reqHanlerWrapper(async (req, res) => {
-		console.log('in here');
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		if (validatedUser.role !== 'lessor')
@@ -93,7 +92,6 @@ router.route('/mylistings').get(
 				'You cannot view your listings if you have registered as a tenant'
 			);
 		const listings = await getAllListings(validatedUser);
-		console.log(listings);
 		res.json({ listings });
 	})
 );
