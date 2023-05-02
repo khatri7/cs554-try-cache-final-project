@@ -14,7 +14,7 @@ import {
 } from '../../utils/listings';
 import { isValidUserAuthObj } from '../../utils/users';
 import redis from '../../configs/redis';
-
+import { upload } from '../../configs/awsS3';
 // One day in seconds
 const ONE_DAY = 86400;
 
@@ -143,6 +143,73 @@ export const updateListing = async (listingIdParam, user, listingObjParam) => {
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
 
+	return updateListingAck.value;
+};
+
+export const uploadImageListingImage = async (
+	listingIdParam,
+	position,
+	user,
+	document
+) => {
+	if (!(Number(position) >= 1 && Number(position) <= 4))
+		throw badRequestErr('Position value should be between 1-5', 'pos');
+	const id = isValidObjectId(listingIdParam);
+	const validatedUser = isValidUserAuthObj(user);
+	if (validatedUser.role !== 'lessor')
+		throw forbiddenErr('You cannot update a listing if you are not the owner');
+	const listing = await getListingById(id);
+
+	if (!document) throw badRequestErr('Image not passed');
+	if (
+		!(document.mimetype === 'image/png' || document.mimetype === 'image/jpeg')
+	)
+		throw badRequestErr('Image has to be of type PNG, JPEG or JPG');
+	const docKey = `listings/${listing._id.toString()}/image/${
+		document.originalname
+	}`;
+	const image = await upload(docKey, document.buffer, document.mimetype);
+
+	const photosArr = listing.photos;
+	photosArr[Number(position)] = image;
+	const listingsCollection = await listings();
+
+	const updateListingAck = await listingsCollection.findOneAndUpdate(
+		{ _id: listing._id },
+		{ $set: { photos: photosArr } }
+	);
+
+	if (updateListingAck.lastErrorObject.n === 0)
+		throw notFoundErr('Listing Not Found');
+	return updateListingAck.value;
+};
+
+export const deleteUploadImageListingImage = async (
+	listingIdParam,
+	position,
+	user
+) => {
+	console.log('photosArr');
+
+	if (!(Number(position) >= 1 && Number(position) <= 4))
+		throw badRequestErr('Position value should be between 1-5', 'pos');
+	const id = isValidObjectId(listingIdParam);
+	const validatedUser = isValidUserAuthObj(user);
+	if (validatedUser.role !== 'lessor')
+		throw forbiddenErr('You cannot update a listing if you are not the owner');
+	const listing = await getListingById(id);
+
+	const photosArr = listing.photos;
+	photosArr[Number(position)] = '';
+	const listingsCollection = await listings();
+	console.log(photosArr);
+	const updateListingAck = await listingsCollection.findOneAndUpdate(
+		{ _id: listing._id },
+		{ $set: { photos: photosArr } }
+	);
+
+	if (updateListingAck.lastErrorObject.n === 0)
+		throw notFoundErr('Listing Not Found');
 	return updateListingAck.value;
 };
 
