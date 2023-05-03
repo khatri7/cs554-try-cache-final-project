@@ -23,7 +23,9 @@
 		"moment": "^2.29.4",
 		"mongodb": "^5.2.0",
 		"multer": "^1.4.5-lts.1",
-		"redis": "^4.6.5"
+		"redis": "^4.6.5",
+		"stripe": "^12.3.0",
+		"uuid": "^9.0.0"
 	},
 	"devDependencies": {
 		"eslint-config-airbnb-base": "^15.0.0"

@@ -171,6 +171,7 @@ function Navbar() {
 												handleCloseUserMenu();
 												try {
 													await logout();
+													navigate('/');
 													dispatch(unsetUser());
 												} catch (e) {
 													let error = 'Unexpected error occurred';

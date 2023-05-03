@@ -1,5 +1,5 @@
 import express from 'express';
-import { reqHanlerWrapper } from './auth';
+import { reqHandlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
 import {
@@ -32,7 +32,7 @@ router
 	.route('/')
 	.post(
 		authenticateToken,
-		reqHanlerWrapper(async (req, res) => {
+		reqHandlerWrapper(async (req, res) => {
 			const { user } = req;
 			const validatedUser = isValidUserAuthObj(user);
 			if (validatedUser.role !== 'lessor')
@@ -45,7 +45,7 @@ router
 		})
 	)
 	.get(
-		reqHanlerWrapper(async (req, res) => {
+		reqHandlerWrapper(async (req, res) => {
 			const { north, east, south, west, placeId, formattedAddress } = req.query;
 			const searchArea = isValidSearchAreaQuery({
 				north,
@@ -64,7 +64,7 @@ router
 	.route('/:id')
 	.patch(
 		authenticateToken,
-		reqHanlerWrapper(async (req, res) => {
+		reqHandlerWrapper(async (req, res) => {
 			const { user } = req;
 			const listingId = req.params.id;
 			const validatedUser = isValidUserAuthObj(user);
@@ -79,7 +79,7 @@ router
 	)
 	.delete(
 		authenticateToken,
-		reqHanlerWrapper(async (req, res) => {
+		reqHandlerWrapper(async (req, res) => {
 			const { user } = req;
 			const listingId = req.params.id;
 			const validatedUser = isValidUserAuthObj(user);
@@ -94,7 +94,7 @@ router
 
 router.route('/mylistings').get(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		if (validatedUser.role !== 'lessor')

@@ -125,3 +125,43 @@ export const createApplication = (applicationBody) => {
 		{ 'Content-Type': 'multipart/form-data' }
 	);
 };
+
+export const declineApplication = (applicationId) =>
+	POST(`/applications/${applicationId}/lessor/reject`);
+
+export const approveApplication = (applicationId, approveApplicationBody) => {
+	const formData = new FormData();
+	Object.entries(approveApplicationBody).forEach((item) => {
+		formData.append(item[0], item[1]);
+	});
+	return POST(
+		`/applications/${applicationId}/lessor/approve`,
+		formData,
+		{},
+		{ 'Content-Type': 'multipart/form-data' }
+	);
+};
+
+export const completeApplication = (applicationId, completeApplicationBody) => {
+	const formData = new FormData();
+	Object.entries(completeApplicationBody).forEach((item) => {
+		if (Array.isArray(item[1])) {
+			item[1].forEach((listItem) => {
+				formData.append(item[0], listItem);
+			});
+		} else formData.append(item[0], item[1]);
+	});
+	formData.append('successUrl', window.location.href);
+	formData.append('cancelUrl', window.location.href);
+	return POST(
+		`/applications/${applicationId}/tenant/complete`,
+		formData,
+		{},
+		{ 'Content-Type': 'multipart/form-data' }
+	);
+};
+
+export const makePayment = (applicationId) =>
+	POST(
+		`/applications/${applicationId}/payment?successUrl=${window.location.href}&cancelUrl=${window.location.href}`
+	);

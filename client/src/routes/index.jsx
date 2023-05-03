@@ -5,7 +5,9 @@ import Listings from 'pages/Listings';
 import Login from 'pages/Login';
 import MyApplications from 'pages/MyApplications';
 import Signup from 'pages/Signup';
+import SingleApplication from 'pages/SingleApplication';
 import SingleListing from 'pages/SingleListing';
+import Success from 'pages/Success';
 import Dashboard from 'pages/Dashboard';
 import React from 'react';
 import { Routes as RRDRoutes, Route } from 'react-router-dom';
@@ -26,6 +28,8 @@ function Routes() {
 				</Route>
 			</Route>
 			<Route path="/my-applications" element={<MyApplications />} />
+			<Route path="/applications/:id" element={<SingleApplication />} />
+			<Route path="success" element={<Success />} />
 		</RRDRoutes>
 	);
 }
