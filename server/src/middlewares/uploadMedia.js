@@ -16,12 +16,12 @@ export const uploadMedia = (field) => {
 	};
 };
 
-export const uploadMedias = (field) => {
+export const uploadMedias = (fields) => {
 	const upload = multer({
 		limits: {
 			fileSize: FIVE_MB,
 		},
-	}).array(field || 'file', 5);
+	}).fields(fields);
 	return (req, res, next) => {
 		upload(req, res, (err) => {
 			if (err) res.status(400).json({ message: err.message });

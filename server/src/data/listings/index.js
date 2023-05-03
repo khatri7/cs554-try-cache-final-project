@@ -26,14 +26,17 @@ export const getListingById = async (idParam) => {
 	return listing;
 };
 
-const checkListingExists = async (location) => {
+const checkListingExists = async (location, apt) => {
 	const listingsCollection = await listings();
 	const listing = await listingsCollection.findOne({
 		'location.placeId': location.placeId,
 	});
-	if (listing)
+	if (listing && !listing.apt)
 		throw badRequestErr('A listing for this location already exists');
-	return true;
+	if (listing && !apt)
+		throw badRequestErr('A listing for this location already exists');
+	if (listing && listing.apt === apt)
+		throw badRequestErr('A listing for this location already exists');
 };
 
 export const createListing = async (listingObjParam, user) => {
@@ -52,7 +55,7 @@ export const createListing = async (listingObjParam, user) => {
 		availabilityDate,
 		location,
 	} = isValidCreateListingObj(listingObjParam);
-	await checkListingExists(location);
+	await checkListingExists(location, apt);
 	const listingObj = {
 		listedBy: new ObjectId(user._id),
 		apt,
