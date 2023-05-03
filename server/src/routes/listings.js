@@ -2,19 +2,29 @@ import express from 'express';
 import { reqHandlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
-import { forbiddenErr, successStatusCodes } from '../utils';
+import {
+	forbiddenErr,
+	isValidStr,
+	successStatusCodes,
+	isValidObjectId,
+	badRequestErr,
+	isNumberChar,
+} from '../utils';
 import {
 	createListing,
 	deleteListing,
 	getListings,
 	updateListing,
 	getAllListings,
+	uploadImageListingImage,
+	deleteUploadImageListingImage,
 } from '../data/listings';
 import {
 	isValidCreateListingObj,
 	isValidSearchAreaQuery,
 	isValidUpdateListingObj,
 } from '../utils/listings';
+import { uploadMedia } from '../middlewares/uploadMedia';
 
 const router = express.Router();
 
@@ -93,6 +103,60 @@ router.route('/mylistings').get(
 			);
 		const listings = await getAllListings(validatedUser);
 		res.json({ listings });
+	})
+);
+
+router.route('/:id/image').post(
+	authenticateToken,
+	uploadMedia('image'),
+	reqHandlerWrapper(async (req, res) => {
+		// update listing by referencing the ID of the Property and the User ID
+		let { id } = req.params;
+		const pos = isValidStr(req.body.position, 'position');
+		id = isValidObjectId(id, 'id');
+		if (
+			!isNumberChar(pos) ||
+			Number.parseInt(pos, 10) < 1 ||
+			Number.parseInt(pos, 10) > 5
+		)
+			throw badRequestErr('Position value should be between 1-5');
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		if (validatedUser.role !== 'lessor')
+			throw forbiddenErr(
+				'You cannot update an Application if are logged in as Tenant'
+			);
+		const listing = await uploadImageListingImage(
+			id,
+			pos,
+			validatedUser,
+			req.file
+		);
+		res.status(successStatusCodes.CREATED).json({ listing });
+	})
+);
+
+router.route('/:id/image').delete(
+	authenticateToken,
+	reqHandlerWrapper(async (req, res) => {
+		let { id } = req.params;
+		const pos = isValidStr(req.body.position, 'position');
+		if (
+			!isNumberChar(pos) ||
+			Number.parseInt(pos, 10) < 1 ||
+			Number.parseInt(pos, 10) > 5
+		)
+			throw badRequestErr('Position value should be between 1-5');
+		id = isValidObjectId(id, 'id');
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		if (validatedUser.role !== 'lessor')
+			throw forbiddenErr(
+				'You cannot update an Application if are logged in as Tenant'
+			);
+		const listing = await deleteUploadImageListingImage(id, pos, validatedUser);
+
+		res.json({ listing });
 	})
 );
 
