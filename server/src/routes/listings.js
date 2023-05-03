@@ -8,6 +8,7 @@ import {
 	successStatusCodes,
 	isValidObjectId,
 	badRequestErr,
+	isNumberChar,
 } from '../utils';
 import {
 	createListing,
@@ -105,18 +106,21 @@ router.route('/mylistings').get(
 	})
 );
 
-router.route('/:id/uploadImage').post(
+router.route('/:id/image').post(
 	authenticateToken,
 	uploadMedia('image'),
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		// update listing by referencing the ID of the Property and the User ID
 		let { id } = req.params;
-		const pos = isValidStr(req.body.position);
+		const pos = isValidStr(req.body.position, 'position');
 		id = isValidObjectId(id, 'id');
-		if (!(Number(pos) >= 1 && Number(pos) <= 4))
-			throw badRequestErr('Position value should be between 1-5', 'pos');
+		if (
+			!isNumberChar(pos) ||
+			Number.parseInt(pos, 10) < 1 ||
+			Number.parseInt(pos, 10) > 5
+		)
+			throw badRequestErr('Position value should be between 1-5');
 		const { user } = req;
-
 		const validatedUser = isValidUserAuthObj(user);
 		if (validatedUser.role !== 'lessor')
 			throw forbiddenErr(
@@ -128,34 +132,31 @@ router.route('/:id/uploadImage').post(
 			validatedUser,
 			req.file
 		);
-
 		res.status(successStatusCodes.CREATED).json({ listing });
-		// res.status(successStatusCodes.CREATED).json({ 1: 'listing' });
 	})
 );
 
-router.route('/:id/deleteImage').post(
+router.route('/:id/image').delete(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		let { id } = req.params;
-
-		const pos = isValidStr(req.body.position);
-		console.log(req.body.position);
-		console.log(req.body.position + 2);
-		// id = isValidObjectId(id, 'id');
-		if (!(Number(pos) >= 1 && Number(pos) <= 4))
-			throw badRequestErr('Position value should be between 1-5', 'pos');
+		const pos = isValidStr(req.body.position, 'position');
+		if (
+			!isNumberChar(pos) ||
+			Number.parseInt(pos, 10) < 1 ||
+			Number.parseInt(pos, 10) > 5
+		)
+			throw badRequestErr('Position value should be between 1-5');
+		id = isValidObjectId(id, 'id');
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		if (validatedUser.role !== 'lessor')
 			throw forbiddenErr(
 				'You cannot update an Application if are logged in as Tenant'
 			);
-		console.log('here 006');
 		const listing = await deleteUploadImageListingImage(id, pos, validatedUser);
 
-		res.status(successStatusCodes.CREATED).json({ listing });
-		// res.status(successStatusCodes.CREATED).json({ 1: 'listing' });
+		res.json({ listing });
 	})
 );
 

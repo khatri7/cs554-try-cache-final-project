@@ -6,6 +6,8 @@ import {
 	internalServerErr,
 	isValidObjectId,
 	notFoundErr,
+	isNumberChar,
+	isValidStr,
 } from '../../utils';
 import {
 	isValidCreateListingObj,
@@ -14,7 +16,7 @@ import {
 } from '../../utils/listings';
 import { isValidUserAuthObj } from '../../utils/users';
 import redis from '../../configs/redis';
-import { upload } from '../../configs/awsS3';
+import { deleteObject, upload } from '../../configs/awsS3';
 // One day in seconds
 const ONE_DAY = 86400;
 
@@ -152,33 +154,35 @@ export const uploadImageListingImage = async (
 	user,
 	document
 ) => {
-	if (!(Number(position) >= 1 && Number(position) <= 4))
-		throw badRequestErr('Position value should be between 1-5', 'pos');
+	const pos = isValidStr(position, 'position');
+	if (
+		!isNumberChar(pos) ||
+		Number.parseInt(pos, 10) < 1 ||
+		Number.parseInt(pos, 10) > 5
+	)
+		throw badRequestErr('Position value should be between 1-5');
 	const id = isValidObjectId(listingIdParam);
 	const validatedUser = isValidUserAuthObj(user);
 	if (validatedUser.role !== 'lessor')
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 	const listing = await getListingById(id);
-
+	if (listing.listedBy.toString() !== validatedUser._id)
+		throw forbiddenErr('Only the owner of the listing can update it');
 	if (!document) throw badRequestErr('Image not passed');
 	if (
 		!(document.mimetype === 'image/png' || document.mimetype === 'image/jpeg')
 	)
 		throw badRequestErr('Image has to be of type PNG, JPEG or JPG');
-	const docKey = `listings/${listing._id.toString()}/image/${
-		document.originalname
-	}`;
+	const docKey = `listings/${listing._id.toString()}/image/${document.pos}`;
 	const image = await upload(docKey, document.buffer, document.mimetype);
-
 	const photosArr = listing.photos;
-	photosArr[Number(position)] = image;
+	photosArr[Number.parseInt(pos, 10)] = image;
 	const listingsCollection = await listings();
-
 	const updateListingAck = await listingsCollection.findOneAndUpdate(
 		{ _id: listing._id },
-		{ $set: { photos: photosArr } }
+		{ $set: { photos: photosArr } },
+		{ returnDocument: 'after' }
 	);
-
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
 	return updateListingAck.value;
@@ -189,25 +193,31 @@ export const deleteUploadImageListingImage = async (
 	position,
 	user
 ) => {
-	console.log('photosArr');
-
-	if (!(Number(position) >= 1 && Number(position) <= 4))
-		throw badRequestErr('Position value should be between 1-5', 'pos');
-	const id = isValidObjectId(listingIdParam);
+	const pos = isValidStr(position, 'position');
+	if (
+		!isNumberChar(pos) ||
+		Number.parseInt(pos, 10) < 1 ||
+		Number.parseInt(pos, 10) > 5
+	)
+		throw badRequestErr('Position value should be between 1-5');
+	const id = isValidObjectId(listingIdParam, 'listing id');
 	const validatedUser = isValidUserAuthObj(user);
 	if (validatedUser.role !== 'lessor')
-		throw forbiddenErr('You cannot update a listing if you are not the owner');
+		throw forbiddenErr('You cannot update a listing if you are a tenant');
 	const listing = await getListingById(id);
-
+	if (listing.listedBy.toString() !== validatedUser._id)
+		throw forbiddenErr('Only the owner of the listing can update it');
 	const photosArr = listing.photos;
-	photosArr[Number(position)] = '';
+	if (!photosArr[Number.parseInt(pos, 10)])
+		throw badRequestErr('There is no image for given position');
+	photosArr[Number.parseInt(pos, 10)] = null;
+	const docKey = `listings/${listing._id.toString()}/image/${document.pos}`;
+	await deleteObject(docKey);
 	const listingsCollection = await listings();
-	console.log(photosArr);
 	const updateListingAck = await listingsCollection.findOneAndUpdate(
 		{ _id: listing._id },
 		{ $set: { photos: photosArr } }
 	);
-
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
 	return updateListingAck.value;
