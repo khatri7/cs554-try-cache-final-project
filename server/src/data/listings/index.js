@@ -176,10 +176,10 @@ export const uploadImageListingImage = async (
 		!(document.mimetype === 'image/png' || document.mimetype === 'image/jpeg')
 	)
 		throw badRequestErr('Image has to be of type PNG, JPEG or JPG');
-	const docKey = `listings/${listing._id.toString()}/image/${document.pos}`;
+	const docKey = `listings/${listing._id.toString()}/image/${pos}`;
 	const image = await upload(docKey, document.buffer, document.mimetype);
 	const photosArr = listing.photos;
-	photosArr[Number.parseInt(pos, 10)] = image;
+	photosArr[Number.parseInt(pos, 10) - 1] = image;
 	const listingsCollection = await listings();
 	const updateListingAck = await listingsCollection.findOneAndUpdate(
 		{ _id: listing._id },
@@ -211,15 +211,16 @@ export const deleteUploadImageListingImage = async (
 	if (listing.listedBy.toString() !== validatedUser._id)
 		throw forbiddenErr('Only the owner of the listing can update it');
 	const photosArr = listing.photos;
-	if (!photosArr[Number.parseInt(pos, 10)])
+	if (!photosArr[Number.parseInt(pos, 10) - 1])
 		throw badRequestErr('There is no image for given position');
-	photosArr[Number.parseInt(pos, 10)] = null;
-	const docKey = `listings/${listing._id.toString()}/image/${document.pos}`;
+	photosArr[Number.parseInt(pos, 10) - 1] = null;
+	const docKey = `listings/${listing._id.toString()}/image/${pos}`;
 	await deleteObject(docKey);
 	const listingsCollection = await listings();
 	const updateListingAck = await listingsCollection.findOneAndUpdate(
 		{ _id: listing._id },
-		{ $set: { photos: photosArr } }
+		{ $set: { photos: photosArr } },
+		{ returnDocument: 'after' }
 	);
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');

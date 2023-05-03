@@ -57,6 +57,5 @@ export const deleteObject = async (Key) => {
 		Key,
 	};
 	const command = new DeleteObjectCommand(params);
-	const response = await s3.send(command);
-	console.log(response);
+	await s3.send(command);
 };
