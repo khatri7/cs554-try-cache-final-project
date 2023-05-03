@@ -2,13 +2,20 @@ import PlacesAutocomplete from 'components/PlacesAutocomplete';
 import React, { useState } from 'react';
 import {
 	getLocationDetails,
-	isValidApt,
 	isValidBedBath,
-	isValidDateStr,
-	isValidDescription,
-	isValidRentDeposit,
+	isValidNum,
+	isValidStr,
 } from 'utils/helpers';
-import { Box, Button, TextField, FormControl } from '@mui/material';
+import {
+	Box,
+	Button,
+	TextField,
+	FormControl,
+	FormControlLabel,
+	FormLabel,
+	RadioGroup,
+	Radio,
+} from '@mui/material';
 import { POST, handleError } from 'utils/api-calls';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
@@ -25,8 +32,12 @@ function CreateListing() {
 		description: '',
 		bedrooms: '',
 		bathrooms: '',
+		squareFoot: '',
 		rent: '',
 		deposit: '',
+		petPolicy: '',
+		laundry: '',
+		parking: '',
 		availabilityDate: null,
 		location: {},
 	});
@@ -34,6 +45,7 @@ function CreateListing() {
 	const [isDisabled, setIsDisabled] = useState(false);
 
 	const handleChange = (event) => {
+		setIsDisabled(false);
 		const { name, value, type } = event.target;
 		setIsDisabled(false);
 		setFormValues({
@@ -51,17 +63,19 @@ function CreateListing() {
 				description,
 				bedrooms,
 				bathrooms,
+				squareFoot,
 				rent,
 				deposit,
-				availabilityDate,
 			} = formValues;
-			isValidDateStr(availabilityDate);
-			isValidDescription(description);
-			isValidApt(apt);
+			isValidStr(description);
+			isValidNum(apt, 'min', 1);
+			isValidNum(bedrooms, 'min', 0);
+			isValidNum(bathrooms, 'min', 1);
 			isValidBedBath(bedrooms);
 			isValidBedBath(bathrooms);
-			isValidRentDeposit(rent);
-			isValidRentDeposit(deposit);
+			isValidNum(rent, 'min', 100);
+			isValidNum(deposit, 'min', 0);
+			isValidNum(squareFoot, 'min', 100);
 			const res = await POST('/listings', formValues);
 			if (res && res.listing._id) {
 				navigate(`/listings/${res.listing._id}`);
@@ -127,6 +141,13 @@ function CreateListing() {
 							onChange={handleChange}
 						/>
 						<TextField
+							type="number"
+							name="squareFoot"
+							label="Square foot in sq.ft"
+							value={formValues.squareFoot}
+							onChange={handleChange}
+						/>
+						<TextField
 							required
 							type="number"
 							name="rent"
@@ -142,6 +163,65 @@ function CreateListing() {
 							value={formValues.deposit}
 							onChange={handleChange}
 						/>
+						<FormLabel component="legend">Pet Policy</FormLabel>
+						<RadioGroup
+							aria-label="petPolicy"
+							name="petPolicy"
+							value={formValues.petPolicy}
+							onChange={handleChange}
+						>
+							<FormControlLabel
+								value="allowed"
+								control={<Radio />}
+								label="Pets Allowed"
+							/>
+							<FormControlLabel
+								value="notAllowed"
+								control={<Radio />}
+								label="Pets Not Allowed"
+							/>
+						</RadioGroup>
+						<FormLabel component="legend">Laundry</FormLabel>
+						<RadioGroup
+							aria-label="laundry"
+							name="laundry"
+							value={formValues.laundry}
+							onChange={handleChange}
+						>
+							<FormControlLabel
+								value="inunit"
+								control={<Radio />}
+								label="In Unit"
+							/>
+							<FormControlLabel
+								value="shared"
+								control={<Radio />}
+								label="Shared"
+							/>
+							<FormControlLabel
+								value="notavailable"
+								control={<Radio />}
+								label="Not Available"
+							/>
+						</RadioGroup>
+						<FormLabel component="legend">Parking</FormLabel>
+						<RadioGroup
+							aria-label="Parking"
+							name="parking"
+							value={formValues.parking}
+							onChange={handleChange}
+						>
+							<FormControlLabel
+								value="available"
+								control={<Radio />}
+								label="Parking Available"
+							/>
+							<FormControlLabel
+								value="notavailable"
+								control={<Radio />}
+								label="Parking Not Available"
+							/>
+						</RadioGroup>
 						<FormControl fullWidth>
 							<LocalizationProvider dateAdapter={AdapterMoment}>
 								<DatePicker

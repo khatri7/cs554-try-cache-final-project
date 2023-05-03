@@ -148,3 +148,33 @@ export const isValidApt = (num) => {
 	if (!/^\d+$/.test(num)) return false;
 	return true;
 };
+
+export const isValidNum = (num, compareOp, compareVal) => {
+	if (!num) return false;
+	if (typeof num !== 'number' || !Number.isFinite(num)) return false;
+	if (!/^\d+$/.test(num)) return false;
+	if (compareOp && compareVal) {
+		switch (compareOp) {
+			case 'min':
+				if (num < compareVal) return false;
+				break;
+			case 'max':
+				if (num > compareVal) return false;
+				break;
+			case 'equal':
+				if (num !== compareVal) return false;
+				break;
+			default:
+				break;
+		}
+	}
+	return true;
+};
+
+export const isValidStr = (strParam) => {
+	if (!strParam) return false;
+	if (typeof strParam !== 'string') return false;
+	const str = strParam.trim();
+	if (str.length === 0) return false;
+	return true;
+};
