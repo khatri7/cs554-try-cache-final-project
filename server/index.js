@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import routes from './src/routes';
 import customErrorHandler from './src/middlewares/customErrorHanler';
 
-const PORT = 4000;
 const FOUR_DAYS = 345600000;
 
 dotenv.config();
@@ -14,7 +13,7 @@ const app = express();
 
 app.use(
 	cors({
-		origin: process.env.CLIENT_URL,
+		origin: process.env.CLIENT_URL || 'http://localhost:3000',
 		credentials: true,
 	})
 );
@@ -39,6 +38,6 @@ app.use('/', routes);
 
 app.use(customErrorHandler);
 
-app.listen(PORT, () => {
-	console.log(`🚀 Server started on port ${PORT}!`);
+app.listen(process.env.SERVER_PORT || 4000, () => {
+	console.log(`🚀 Server started on port ${process.env.SERVER_PORT || 4000}!`);
 });

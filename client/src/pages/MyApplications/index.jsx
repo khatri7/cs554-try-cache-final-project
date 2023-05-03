@@ -17,10 +17,11 @@ import { useNavigate } from 'react-router-dom';
 
 const tableHeaders = ['Listing', 'Applied', 'Last Updated', 'Status', ''];
 
-const chipColor = {
+export const chipColor = {
 	REVIEW: 'warning',
 	DECLINED: 'error',
 	APPROVED: 'success',
+	PAYMENT_PENDING: 'error',
 	COMPLETED: 'success',
 };
 

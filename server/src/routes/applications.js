@@ -1,5 +1,5 @@
 import express from 'express';
-import { reqHanlerWrapper } from './auth';
+import { reqHandlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
 import {
@@ -17,9 +17,12 @@ import {
 	getUserApplications,
 	rejectapplication,
 	completeApplication,
+	updatePaymentStatus,
 } from '../data/applications';
-
-import { isValidCreateApplicationObj } from '../utils/applications';
+import {
+	applicationStatus,
+	isValidCreateApplicationObj,
+} from '../utils/applications';
 import { getUserById } from '../data/users';
 import { createCheckoutSession, getCheckoutSession } from '../configs/stripe';
 import { uploadMedia, uploadMedias } from '../middlewares/uploadMedia';
@@ -28,7 +31,7 @@ const router = express.Router();
 
 router.route('/my-applications').get(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		const applications = await getUserApplications(validatedUser);
@@ -38,7 +41,7 @@ router.route('/my-applications').get(
 
 router.route('/:id').get(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		let { id } = req.params;
@@ -48,40 +51,91 @@ router.route('/:id').get(
 	})
 );
 
-router.route('/payment').post(
+router.route('/:id/payment').post(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
-		if (req.headers.origin !== process.env.CLIENT_URL)
-			throw forbiddenErr('Origin not allowed');
+	reqHandlerWrapper(async (req, res) => {
+		// if (req.headers.origin !== (process.env.CLIENT_URL || "http://localhost:3000"))
+		// 	throw forbiddenErr('Origin not allowed');
+		const { successUrl, cancelUrl } = req.query;
+		const { id } = req.params;
+		const applicationId = isValidObjectId(id);
 		const validatedUser = isValidUserAuthObj(req.user);
 		const { firstName, lastName, email, phone } = await getUserById(
 			validatedUser._id
 		);
+		const application = await getApplicationById(applicationId, validatedUser);
+		if (application.status !== applicationStatus.PAYMENT_PENDING)
+			throw badRequestErr('You cannot initiate a payment at current status');
 		const session = await createCheckoutSession(
+			validatedUser._id,
 			firstName,
 			lastName,
 			email,
-			phone
+			phone,
+			applicationId,
+			successUrl,
+			cancelUrl
 		);
-		res.redirect(303, session.url);
+		res.json({
+			paymentUrl: session.url,
+		});
 	})
 );
 
-router.route('/payment/success').get(
+router.route('/:id/payment/success').get(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
-		const { session_id: sessionId } = req.query;
+	reqHandlerWrapper(async (req, res) => {
+		const { id } = req.params;
+		const applicationId = isValidObjectId(id);
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		const { session_id: sessionId, successUrl } = req.query;
 		if (!sessionId) throw badRequestErr('No session id found');
 		const session = await getCheckoutSession(sessionId);
-		console.log(session.payment_status);
-		res.redirect(303, 'http://localhost:3000/success');
+		await getApplicationById(applicationId, validatedUser);
+		if (validatedUser._id !== session.metadata.user_id)
+			throw forbiddenErr('This session was not initiated by you');
+		if (applicationId !== session.metadata.application_id)
+			throw badRequestErr('Invalid application id and session id combination');
+		if (session.payment_status !== 'paid')
+			throw badRequestErr('The payment has not been completed');
+		const application = await updatePaymentStatus(
+			applicationId,
+			session,
+			validatedUser
+		);
+		if (successUrl) return res.redirect(303, successUrl);
+		return res.json({ application });
+	})
+);
+
+router.route('/:id/payment/cancel').get(
+	authenticateToken,
+	reqHandlerWrapper(async (req, res) => {
+		const { id } = req.params;
+		const applicationId = isValidObjectId(id);
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		const { session_id: sessionId, cancelUrl } = req.query;
+		if (!sessionId) throw badRequestErr('No session id found');
+		const session = await getCheckoutSession(sessionId);
+		await getApplicationById(applicationId, validatedUser);
+		if (validatedUser._id !== session.metadata.user_id)
+			throw forbiddenErr('This session was not initiated by you');
+		if (applicationId !== session.metadata.application_id)
+			throw badRequestErr('Invalid application id and session id combination');
+		if (session.payment_status === 'paid')
+			throw badRequestErr('The payment has been completed');
+		if (cancelUrl) return res.redirect(303, cancelUrl);
+		const application = await getApplicationById(applicationId, validatedUser);
+		return res.json({ application });
 	})
 );
 
 router.route('/').post(
 	authenticateToken,
 	uploadMedia('document'),
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		// Create application by referencing the ID of the Property and the User ID
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
@@ -101,7 +155,7 @@ router.route('/').post(
 
 router.route('/:id/lessor/reject').post(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
 		let { id } = req.params;
 		id = isValidObjectId(id);
@@ -121,7 +175,7 @@ router.route('/:id/lessor/reject').post(
 router.route('/:id/lessor/approve').post(
 	authenticateToken,
 	uploadMedia('lease'),
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
 		let { id } = req.params;
 		id = isValidObjectId(id);
@@ -147,8 +201,17 @@ router.route('/:id/lessor/approve').post(
 
 router.route('/:id/tenant/complete').post(
 	authenticateToken,
-	uploadMedias('documents'),
-	reqHanlerWrapper(async (req, res) => {
+	uploadMedias([
+		{
+			name: 'lease',
+			maxCount: 1,
+		},
+		{
+			name: 'documents',
+			maxCount: 5,
+		},
+	]),
+	reqHandlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
 		let { id } = req.params;
 		id = isValidObjectId(id);
@@ -159,14 +222,18 @@ router.route('/:id/tenant/complete').post(
 			: '';
 		if (validatedUser.role !== 'tenant')
 			throw forbiddenErr('You cannot update this information as Lessor.');
-		const application = await completeApplication(
+		await completeApplication(
 			id,
 			text,
 			validatedUser,
-			req.files
+			req.files.documents,
+			req.files.lease[0]
 		);
-
-		res.status(successStatusCodes.CREATED).json({ application });
+		let redirectUrl = `/applications/${id}/payment?`;
+		if (req.body.successUrl) redirectUrl += `successUrl=${req.body.successUrl}`;
+		if (req.body.successUrl && req.body.cancelUrl) redirectUrl += '&';
+		if (req.body.cancelUrl) redirectUrl += `cancelUrl=${req.body.cancelUrl}`;
+		res.redirect(307, redirectUrl);
 	})
 );
 

@@ -4,6 +4,7 @@ import {
 	badRequestErr,
 	forbiddenErr,
 	internalServerErr,
+	isValidArray,
 	isValidObjectId,
 	notFoundErr,
 	unauthorizedErr,
@@ -14,8 +15,8 @@ import {
 	isValidCreateApplicationObj,
 } from '../../utils/applications';
 import { getListingById } from '../listings';
-import { getUserById } from '../users';
 import { upload } from '../../configs/awsS3';
+import { getUserById } from '../users';
 
 export const getApplicationById = async (idParam, currUser) => {
 	const id = isValidObjectId(idParam);
@@ -31,7 +32,21 @@ export const getApplicationById = async (idParam, currUser) => {
 		application.tenant?._id?.toString() !== validatedUser._id
 	)
 		throw forbiddenErr('You are not allowed to view this application');
-	return application;
+	const { firstName, lastName, email, phone } = await getUserById(
+		application.tenant._id.toString()
+	);
+	if (application.status === applicationStatus.PAYMENT_PENDING)
+		delete application.notes.COMPLETED;
+	return {
+		...application,
+		tenant: {
+			...application.tenant,
+			firstName,
+			lastName,
+			email,
+			phone,
+		},
+	};
 };
 
 const checkApplicationExists = async (tenantId, listingId) => {
@@ -54,9 +69,9 @@ export const createApplication = async (
 		throw forbiddenErr(
 			'You cannot create an application if you have registered as a lessor'
 		);
-	const { _id, firstName, lastName, email, phone } = await getUserById(
-		validatedUser._id
-	);
+	// const { _id, firstName, lastName, email, phone } = await getUserById(
+	// 	validatedUser._id
+	// );
 	const { listingId, notes } = isValidCreateApplicationObj(applicationObjParam);
 	const {
 		listedBy,
@@ -93,11 +108,11 @@ export const createApplication = async (
 		updatedAt: now,
 		status: applicationStatus.REVIEW,
 		tenant: {
-			_id,
-			firstName,
-			lastName,
-			email,
-			phone,
+			_id: new ObjectId(validatedUser._id),
+			// firstName,
+			// lastName,
+			// email,
+			// phone,
 		},
 		notes: {
 			[applicationStatus.REVIEW]: {
@@ -133,9 +148,11 @@ export const rejectapplication = async (ApplicationId, user) => {
 		unauthorizedErr('incorrect User accessing the application');
 	}
 
+	const now = new Date();
+
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
-		{ $set: { status: applicationStatus.DECLINED } }
+		{ $set: { status: applicationStatus.DECLINED, updatedAt: now } }
 	);
 	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
 		throw internalServerErr(
@@ -157,8 +174,29 @@ export const getUserApplications = async (currUser) => {
 		.find({
 			[filterKey]: new ObjectId(validatedUser._id),
 		})
+		.sort({ updatedAt: -1 })
 		.toArray();
-	return applicationsArr;
+	const applicationsWithTenantInfo = await Promise.all(
+		applicationsArr.map(async (app) => {
+			const { firstName, lastName, email, phone } = await getUserById(
+				app.tenant._id.toString()
+			);
+			if (app.status === applicationStatus.PAYMENT_PENDING)
+				// eslint-disable-next-line no-param-reassign
+				delete app.notes.COMPLETED;
+			return {
+				...app,
+				tenant: {
+					...app.tenant,
+					firstName,
+					lastName,
+					email,
+					phone,
+				},
+			};
+		})
+	);
+	return applicationsWithTenantInfo;
 };
 
 export const approveApplication = async (
@@ -217,7 +255,8 @@ export const completeApplication = async (
 	applicationId,
 	text,
 	user,
-	documents
+	documents,
+	signedLease
 ) => {
 	const validatedUser = isValidUserAuthObj(user);
 
@@ -234,24 +273,33 @@ export const completeApplication = async (
 
 	const noteObj = application.notes;
 	const updatedAt = new Date();
-	if (!documents) throw badRequestErr('Lease is required');
 	const docsUrl = [];
-	await Promise.all(
-		documents.map(async (document) => {
-			if (document.mimetype !== 'application/pdf')
-				throw badRequestErr('Lease has to be of type PDF');
-			const docKey = `applications/${applicationId.toString()}/COMPLETED/${
-				document.originalname
-			}`;
-			docsUrl.push(await upload(docKey, document.buffer, document.mimetype));
-		})
-	);
-	noteObj[applicationStatus.COMPLETED] = { text, documents: docsUrl };
+	if (documents) {
+		isValidArray(documents, 'Documents');
+		await Promise.all(
+			documents?.map(async (document) => {
+				if (document.mimetype !== 'application/pdf')
+					throw badRequestErr('Document has to be of type PDF');
+				const docKey = `applications/${applicationId.toString()}/COMPLETED/${
+					document.originalname
+				}`;
+				docsUrl.push(await upload(docKey, document.buffer, document.mimetype));
+			})
+		);
+	}
+	if (!signedLease) throw badRequestErr('Signed lease is required');
+	if (signedLease.mimetype !== 'application/pdf')
+		throw badRequestErr('Lease has to be of type PDF');
+	const docKey = `applications/${applicationId.toString()}/COMPLETED/${
+		signedLease.originalname
+	}`;
+	const lease = await upload(docKey, signedLease.buffer, signedLease.mimetype);
+	noteObj[applicationStatus.COMPLETED] = { text, documents: docsUrl, lease };
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
 		{
 			$set: {
-				status: applicationStatus.COMPLETED,
+				status: applicationStatus.PAYMENT_PENDING,
 				updatedAt,
 				notes: noteObj,
 			},
@@ -266,4 +314,37 @@ export const completeApplication = async (
 		validatedUser
 	);
 	return applicationUpdate;
+};
+
+export const updatePaymentStatus = async (
+	applicationId,
+	paymentSession,
+	currUser
+) => {
+	const id = isValidObjectId(applicationId);
+	const validatedUser = isValidUserAuthObj(currUser);
+	const application = await getApplicationById(id, validatedUser);
+	const applicationCollection = await applications();
+	if (paymentSession.payment_status !== 'paid')
+		throw badRequestErr('The payment has not been completed');
+	const updatedAt = Date.now();
+	const applicationAck = await applicationCollection.updateOne(
+		{ _id: application._id },
+		{
+			$set: {
+				status: applicationStatus.COMPLETED,
+				paymentSessionId: paymentSession.id,
+				updatedAt,
+			},
+		}
+	);
+	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
+		throw internalServerErr(
+			'Could not Update the Application. Please try again.'
+		);
+	const updatedApplication = await getApplicationById(
+		applicationId,
+		validatedUser
+	);
+	return updatedApplication;
 };

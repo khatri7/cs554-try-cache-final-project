@@ -15,7 +15,7 @@ import authenticateToken from '../middlewares/auth';
 
 const FOUR_DAYS = 345600000;
 
-export const reqHanlerWrapper = (reqHandler) => (req, res, next) => {
+export const reqHandlerWrapper = (reqHandler) => (req, res, next) => {
 	reqHandler(req, res, next).catch(next);
 };
 
@@ -47,7 +47,7 @@ router.route('/').post(async (req, res) => {
 });
 
 router.route('/signup').post(
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		const userObj = await isValidUserObj(req.body);
 		const { user, token } = await createUser(userObj);
 		res
@@ -62,7 +62,7 @@ router.route('/signup').post(
 );
 
 router.route('/login').post(
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		const userLoginObj = isValidUserLoginObj(req.body);
 		const { user, token } = await authenticateUser(userLoginObj);
 		res
@@ -78,7 +78,7 @@ router.route('/login').post(
 
 router.route('/logout').post(
 	authenticateToken,
-	reqHanlerWrapper(async (req, res) => {
+	reqHandlerWrapper(async (req, res) => {
 		res.clearCookie('token').status(successStatusCodes.CREATED).send();
 	})
 );

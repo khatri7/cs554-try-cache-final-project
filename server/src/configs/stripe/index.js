@@ -42,10 +42,14 @@ export const getOrCreateCustomer = async (name, email, phone) => {
 };
 
 export const createCheckoutSession = async (
+	userId,
 	firstName,
 	lastName,
 	email,
-	phone
+	phone,
+	applicationId,
+	successUrl,
+	cancelUrl
 ) => {
 	const idempotencyKey = uuidv4();
 	const customer = await getOrCreateCustomer(
@@ -64,9 +68,20 @@ export const createCheckoutSession = async (
 				},
 			],
 			mode: 'payment',
-			success_url:
-				'http://localhost:4000/applications/payment/success?session_id={CHECKOUT_SESSION_ID}',
-			cancel_url: 'http://localhost:3000/cancel',
+			metadata: {
+				user_id: userId,
+				application_id: applicationId,
+			},
+			success_url: `http://localhost:${
+				process.env.SERVER_PORT || 4000
+			}/applications/${applicationId}/payment/success?session_id={CHECKOUT_SESSION_ID}${
+				successUrl ? `&successUrl=${successUrl}` : ''
+			}`,
+			cancel_url: `http://localhost:${
+				process.env.SERVER_PORT || 4000
+			}/applications/${applicationId}/payment/cancel?session_id={CHECKOUT_SESSION_ID}${
+				cancelUrl ? `&cancelUrl=${cancelUrl}` : ''
+			}`,
 		},
 		{ idempotencyKey }
 	);
