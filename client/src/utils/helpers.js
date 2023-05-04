@@ -119,6 +119,66 @@ export const autoLogin = async (dispatch) => {
 	}
 };
 
+export const isValidDescription = (str) => {
+	if (!str) return false;
+	if (typeof str !== 'string') return false;
+	if (str.trim().length === 0) return false;
+	if (str.length > 500) return false;
+	return true;
+};
+
+export const isValidBedBath = (num) => {
+	if (!num) return false;
+	if (typeof num !== 'number') return false;
+	if (num < 1 || num > 20) return false;
+	if (!/^\d+$/.test(num)) return false;
+	return true;
+};
+
+export const isValidRentDeposit = (num) => {
+	if (!num) return false;
+	if (typeof num !== 'number') return false;
+	if (!/^\d+$/.test(num)) return false;
+	return true;
+};
+
+export const isValidApt = (num) => {
+	if (!num) return false;
+	if (typeof num !== 'number') return false;
+	if (!/^\d+$/.test(num)) return false;
+	return true;
+};
+
+export const isValidNum = (num, compareOp, compareVal) => {
+	if (!num) return false;
+	if (typeof num !== 'number' || !Number.isFinite(num)) return false;
+	if (!/^\d+$/.test(num)) return false;
+	if (compareOp && compareVal) {
+		switch (compareOp) {
+			case 'min':
+				if (num < compareVal) return false;
+				break;
+			case 'max':
+				if (num > compareVal) return false;
+				break;
+			case 'equal':
+				if (num !== compareVal) return false;
+				break;
+			default:
+				break;
+		}
+	}
+	return true;
+};
+
+export const isValidStr = (strParam) => {
+	if (!strParam) return false;
+	if (typeof strParam !== 'string') return false;
+	const str = strParam.trim();
+	if (str.length === 0) return false;
+	return true;
+};
+
 export const prettifyPhoneString = (phone) => {
 	if (phone.length !== 10) return phone;
 	const firstThree = phone.substring(0, 3);

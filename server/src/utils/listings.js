@@ -1,5 +1,13 @@
 import moment from 'moment';
-import { badRequestErr, isValidNum, isValidObj, isValidStr } from '.';
+import {
+	badRequestErr,
+	isValidLaundry,
+	isValidNum,
+	isValidObj,
+	isValidParking,
+	isValidPetPolicy,
+	isValidStr,
+} from '.';
 import { isValidDateStr } from './users';
 
 const isValidAvailabilityDate = (dateStr) => {
@@ -25,6 +33,10 @@ export const isValidCreateListingObj = (listingObj) => {
 		deposit: isValidNum(listingObj.deposit, 'Deposit', 'min', 0),
 		availabilityDate: isValidAvailabilityDate(listingObj.availabilityDate),
 		location: listingObj.location,
+		laundry: isValidLaundry(listingObj.laundry),
+		petPolicy: isValidPetPolicy(listingObj.petPolicy),
+		parking: isValidParking(listingObj.parking),
+		squareFoot: isValidNum(listingObj.squareFoot, 'SquareFoot', 'min', 100),
 	};
 };
 

@@ -209,3 +209,21 @@ export const isValidJwtString = (tokenParam) => {
 };
 
 export const createJwt = (data) => jwt.sign(data, process.env.JWT_SECRET);
+
+export const isValidLaundry = (data) => {
+	if (data !== 'inunit' && data !== 'shared' && data !== 'notavailable')
+		throw badRequestErr('Invalid laundry');
+	return data;
+};
+
+export const isValidParking = (data) => {
+	if (data !== 'available' && data !== 'notavailable')
+		throw badRequestErr('Invalid Parking');
+	return data;
+};
+
+export const isValidPetPolicy = (data) => {
+	if (data !== 'allowed' && data !== 'notAllowed')
+		throw badRequestErr('Invalid Pet Policy');
+	return data;
+};

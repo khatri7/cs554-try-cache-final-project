@@ -56,6 +56,10 @@ export const createListing = async (listingObjParam, user) => {
 		deposit,
 		availabilityDate,
 		location,
+		squareFoot,
+		laundry,
+		petPolicy,
+		parking,
 	} = isValidCreateListingObj(listingObjParam);
 	await checkListingExists(location, apt);
 	const listingObj = {
@@ -66,12 +70,16 @@ export const createListing = async (listingObjParam, user) => {
 		bathrooms,
 		rent,
 		deposit,
+		squareFoot,
 		availabilityDate,
 		location: {
 			...location,
 			type: 'Point',
 			coordinates: [location.lng, location.lat],
 		},
+		laundry,
+		petPolicy,
+		parking,
 		occupied: false,
 		photos: [],
 	};
