@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+	S3Client,
+	PutObjectCommand,
+	DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 
 let s3;
 
@@ -45,4 +49,13 @@ export const upload = async (Key, Body, ContentType, ContentLengthRange) => {
 	const command = new PutObjectCommand(params);
 	await s3.send(command);
 	return `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${Key}`;
+};
+
+export const deleteObject = async (Key) => {
+	const params = {
+		Bucket: process.env.S3_BUCKET_NAME,
+		Key,
+	};
+	const command = new DeleteObjectCommand(params);
+	await s3.send(command);
 };

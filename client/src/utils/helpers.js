@@ -178,3 +178,14 @@ export const isValidStr = (strParam) => {
 	if (str.length === 0) return false;
 	return true;
 };
+
+export const prettifyPhoneString = (phone) => {
+	if (phone.length !== 10) return phone;
+	const firstThree = phone.substring(0, 3);
+	const secondThree = phone.substring(3, 6);
+	const lastFour = phone.substring(6);
+	let formattedNumber = '';
+	formattedNumber += `+1 (${firstThree}) ${secondThree}`;
+	if (phone.length > 6) formattedNumber += `-${lastFour}`;
+	return formattedNumber;
+};

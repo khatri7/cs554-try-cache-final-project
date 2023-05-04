@@ -4,7 +4,6 @@ import {
 	FormHelperText,
 	InputAdornment,
 	Stack,
-	TextField,
 	Typography,
 } from '@mui/material';
 import { TextInput } from 'components/FormikMuiFields';
@@ -62,7 +61,7 @@ function Application() {
 							listingId: id,
 						});
 						if (!res.application) throw new Error();
-						navigate(`/applications/${res.application._id}`);
+						navigate('/my-applications');
 						dispatch(successAlert('Application submitted successfully'));
 					} catch (e) {
 						let error = 'Unexpected error occurred';
@@ -117,7 +116,7 @@ function Application() {
 							</Stack>
 							<Field
 								name="notes"
-								component={TextField}
+								component={TextInput}
 								label="Notes"
 								multiline
 								minRows={10}

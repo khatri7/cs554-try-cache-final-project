@@ -156,11 +156,22 @@ function Navbar() {
 												My Applications
 											</Typography>
 										</MenuItem>
+
+										<MenuItem
+											onClick={async () => {
+												handleCloseUserMenu();
+												navigate('/dashboard');
+											}}
+										>
+											<Typography textAlign="center">View Dashboard</Typography>
+										</MenuItem>
+
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
 												try {
 													await logout();
+													navigate('/');
 													dispatch(unsetUser());
 												} catch (e) {
 													let error = 'Unexpected error occurred';

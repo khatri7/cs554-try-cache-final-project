@@ -146,8 +146,8 @@ export const isValidNum = (num, varName, compareOp, compareVal) => {
  *
  * @param {Array} arr
  * @param {string} arrName
- * @param {("min" | "max" | "equal")} compareOp
- * @param {number} compareVal
+ * @param {("min" | "max" | "equal")} [compareOp]
+ * @param {number} [compareVal]
  */
 export const isValidArray = (arr, arrName, compareOp, compareVal) => {
 	if (!arr) throw badRequestErr(`You need to provide ${arrName}`);
