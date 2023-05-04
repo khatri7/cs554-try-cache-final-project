@@ -6,14 +6,61 @@ import '@fontsource/roboto/700.css';
 import Layout from 'components/Layout';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Routes from 'routes';
+import { createTheme, ThemeProvider } from '@mui/material';
+
+const theme = createTheme({
+	components: {
+		MuiButton: {
+			styleOverrides: {
+				root: {
+					'&.Mui-disabled': {
+						':disabled': {
+							color: '#5c5c5c',
+						},
+					},
+				},
+			},
+		},
+		MuiTextField: {
+			styleOverrides: {
+				root: {
+					'& legend': { display: 'none' },
+					'& fieldset': { top: 0 },
+					'& label': {
+						padding: '0 5px',
+						background: 'white',
+					},
+				},
+			},
+		},
+		MuiInputLabel: {
+			styleOverrides: {
+				root: {
+					'&.Mui-disabled': {
+						color: '#747474',
+					},
+				},
+			},
+		},
+		MuiAvatar: {
+			styleOverrides: {
+				root: {
+					backgroundColor: '#767676',
+				},
+			},
+		},
+	},
+});
 
 function App() {
 	return (
-		<Router>
-			<Layout>
-				<Routes />
-			</Layout>
-		</Router>
+		<ThemeProvider theme={theme}>
+			<Router>
+				<Layout>
+					<Routes />
+				</Layout>
+			</Router>
+		</ThemeProvider>
 	);
 }
 

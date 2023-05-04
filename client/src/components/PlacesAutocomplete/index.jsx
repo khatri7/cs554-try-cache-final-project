@@ -116,7 +116,14 @@ function PlacesAutocomplete({
 						);
 					}}
 					renderInput={(params) => (
-						<TextField {...params} placeholder={placeholder} label={label} />
+						<TextField
+							{...params}
+							placeholder={placeholder}
+							label={label}
+							sx={{
+								background: 'white',
+							}}
+						/>
 					)}
 				/>
 			</FormControl>
