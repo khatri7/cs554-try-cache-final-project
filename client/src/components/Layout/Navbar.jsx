@@ -33,7 +33,7 @@ function Navbar() {
 
 	const [anchorElUser, setAnchorElUser] = React.useState(null);
 
-	const user = useSelector((state) => state.user);
+	const user = useSelector((state) => state.user.value);
 
 	const dispatch = useDispatch();
 

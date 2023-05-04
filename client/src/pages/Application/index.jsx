@@ -18,7 +18,7 @@ import { createApplication, handleError } from 'utils/api-calls';
 const FIVE_MB = 1024 * 1024 * 5;
 
 function Application() {
-	const user = useSelector((state) => state.user);
+	const user = useSelector((state) => state.user.value);
 	const fileUploadRef = useRef();
 	const navigate = useNavigate();
 	const { id } = useParams();

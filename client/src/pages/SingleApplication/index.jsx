@@ -44,7 +44,7 @@ function SingleApplication() {
 	const [disableDeclineBtn, setDisableDeclineBtn] = useState(false);
 	const [application, setApplication] = useState(null);
 	const [initiatingPayment, setInitiatingPayment] = useState(false);
-	const role = useSelector((state) => state.user?.role);
+	const role = useSelector((state) => state.user.value?.role);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
