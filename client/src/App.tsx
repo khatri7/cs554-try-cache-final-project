@@ -6,9 +6,9 @@ import '@fontsource/roboto/700.css';
 import Layout from 'components/Layout';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Routes from 'routes';
-import { createTheme, ThemeProvider } from '@mui/material';
+import { createTheme, Theme, ThemeProvider } from '@mui/material';
 
-const theme = createTheme({
+const theme: Theme = createTheme({
 	components: {
 		MuiButton: {
 			styleOverrides: {
