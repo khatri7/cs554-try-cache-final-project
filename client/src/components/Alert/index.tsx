@@ -1,11 +1,11 @@
 import { Snackbar, Alert as MuiAlert } from '@mui/material';
+import { useAppDispatch, useAppSelector } from 'hooks';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { dismissAlert } from 'store/alert';
 
-function Alert() {
-	const { open, type, message } = useSelector((state) => state.alert);
-	const dispatch = useDispatch();
+const Alert: React.FC<{}> = () => {
+	const { open, type, message } = useAppSelector((state) => state.alert);
+	const dispatch = useAppDispatch();
 	const handleClose = () => {
 		dispatch(dismissAlert());
 	};
@@ -19,6 +19,6 @@ function Alert() {
 			<MuiAlert severity={type || 'info'}>{message}</MuiAlert>
 		</Snackbar>
 	);
-}
+};
 
 export default Alert;

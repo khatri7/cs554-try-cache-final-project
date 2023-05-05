@@ -1,14 +1,8 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+import { User } from 'utils/types';
 
 type UserSliceState = {
-	value: {
-		_id: string;
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-		role: 'tenant' | 'lessor';
-	} | null;
+	value: User | null;
 };
 
 const initialState: UserSliceState = {

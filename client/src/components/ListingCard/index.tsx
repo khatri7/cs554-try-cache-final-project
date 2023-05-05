@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Listing } from 'utils/types/listing';
 
 const formatter = new Intl.NumberFormat('en-US', {
 	style: 'currency',
@@ -16,7 +17,7 @@ const formatter = new Intl.NumberFormat('en-US', {
 	maximumFractionDigits: 0,
 });
 
-function ListingCard({ listing }) {
+const ListingCard: React.FC<{ listing: Listing }> = ({ listing }) => {
 	const navigate = useNavigate();
 	return (
 		<Card raised>
@@ -62,6 +63,6 @@ function ListingCard({ listing }) {
 			</Stack>
 		</Card>
 	);
-}
+};
 
 export default ListingCard;

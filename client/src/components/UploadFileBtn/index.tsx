@@ -1,9 +1,19 @@
 import { UploadFile } from '@mui/icons-material';
 import { Button, Stack, Typography } from '@mui/material';
-import React, { useRef } from 'react';
+import React, { ChangeEventHandler, useRef } from 'react';
 
-function UploadFileBtn({ onChange, value, label = 'Upload' }) {
-	const fileUploadRef = useRef();
+interface UploadFileBtnProps {
+	onChange: ChangeEventHandler<HTMLInputElement>;
+	value: File | null;
+	label: string;
+}
+
+const UploadFileBtn: React.FC<UploadFileBtnProps> = ({
+	onChange,
+	value,
+	label = 'Upload',
+}) => {
+	const fileUploadRef = useRef<HTMLInputElement | null>(null);
 	return (
 		<>
 			<Stack direction="row" gap={2} alignItems="center">
@@ -34,6 +44,6 @@ function UploadFileBtn({ onChange, value, label = 'Upload' }) {
 			/>
 		</>
 	);
-}
+};
 
 export default UploadFileBtn;
