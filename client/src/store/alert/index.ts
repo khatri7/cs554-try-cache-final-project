@@ -1,29 +1,37 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+
+type AlertSliceState = {
+	open: boolean;
+	type: 'info' | 'error' | 'warning' | 'success';
+	message: string;
+};
+
+const initialState: AlertSliceState = {
+	open: false,
+	type: 'info',
+	message: '',
+};
 
 export const alertSlice = createSlice({
 	name: 'alert',
-	initialState: {
-		open: false,
-		type: 'info',
-		message: '',
-	},
+	initialState,
 	reducers: {
-		errorAlert: (state, action) => {
+		errorAlert: (state, action: PayloadAction<string>) => {
 			state.open = true;
 			state.type = 'error';
 			state.message = action.payload;
 		},
-		warningAlert: (state, action) => {
+		warningAlert: (state, action: PayloadAction<string>) => {
 			state.open = true;
 			state.type = 'warning';
 			state.message = action.payload;
 		},
-		infoAlert: (state, action) => {
+		infoAlert: (state, action: PayloadAction<string>) => {
 			state.open = true;
 			state.type = 'info';
 			state.message = action.payload;
 		},
-		successAlert: (state, action) => {
+		successAlert: (state, action: PayloadAction<string>) => {
 			state.open = true;
 			state.type = 'success';
 			state.message = action.payload;

@@ -9,8 +9,11 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Application } from 'utils/types/application';
 
-function ViewAllApplications({ application }) {
+const ViewAllApplications: React.FC<{ application: Application }> = ({
+	application,
+}) => {
 	const navigate = useNavigate();
 	return (
 		<Card>
@@ -57,6 +60,6 @@ function ViewAllApplications({ application }) {
 			</Stack>
 		</Card>
 	);
-}
+};
 
 export default ViewAllApplications;

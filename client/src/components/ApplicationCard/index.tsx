@@ -9,8 +9,11 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Application } from 'utils/types/application';
 
-function ApplicationCard({ application }) {
+const ApplicationCard: React.FC<{ application: Application }> = ({
+	application,
+}) => {
 	const navigate = useNavigate();
 	return (
 		<Card>
@@ -19,9 +22,9 @@ function ApplicationCard({ application }) {
 					<CardContent>
 						<Stack direction="row">
 							<Box>
-								<Typography>{application.location.streetAddress}</Typography>
-								{application.location.apt && (
-									<Typography>Apt {application.location.apt}</Typography>
+								<Typography>{application.listing.streetAddress}</Typography>
+								{application.listing.apt && (
+									<Typography>Apt {application.listing.apt}</Typography>
 								)}
 							</Box>
 							<Box>
@@ -40,6 +43,6 @@ function ApplicationCard({ application }) {
 			</Stack>
 		</Card>
 	);
-}
+};
 
 export default ApplicationCard;
