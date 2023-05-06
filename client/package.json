@@ -132,7 +132,8 @@
 				],
 				"rules": {
 					"react/function-component-definition": "off",
-					"no-underscore-dangle": "off"
+					"no-underscore-dangle": "off",
+					"react/require-default-props": "off"
 				}
 			}
 		]
