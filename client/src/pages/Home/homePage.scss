@@ -41,13 +41,14 @@
 	}
 
 	&__cards-container {
+		margin-top: 4rem;
 		padding: 2rem 0;
 		display: flex;
 		flex-direction: row;
 		justify-content: space-around;
 
 		&__card-btn {
-			background-color: white;
+			background-color: transparent;
 			border: 1px solid $primary-color;
 			color: $primary-color;
 			font-size: 1.1rem;
@@ -64,6 +65,8 @@
 		&__card {
 			@include transition(transform, 0.3s);
 			width: 380px;
+			cursor: pointer;
+			box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 4px;
 			&:hover {
 				transform: scale(1.05);
 				button {
@@ -71,6 +74,14 @@
 					color: white;
 				}
 			}
+		}
+
+		&__card-content {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			background-color: #faf9f6;
+			gap: 1rem;
 		}
 	}
 }

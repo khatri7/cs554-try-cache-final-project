@@ -4,6 +4,8 @@ import PlacesAutocomplete from 'components/PlacesAutocomplete';
 import { Card, CardContent, Typography } from '@mui/material';
 import { Suggestion } from 'use-places-autocomplete';
 import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from 'hooks';
+import { errorAlert } from 'store/alert';
 
 const Home: React.FC<{}> = () => {
 	const navigate = useNavigate();
@@ -11,6 +13,31 @@ const Home: React.FC<{}> = () => {
 		navigate('/listings', {
 			state: { location },
 		});
+	};
+	const dispatch = useAppDispatch();
+	const role = useAppSelector((state) => state.user.value?.role);
+	const handleCreateListing = () => {
+		if (role !== 'tenant') {
+			dispatch(
+				errorAlert('You need to be logged in as a lessor to create a listing')
+			);
+			navigate('/login');
+		} else {
+			navigate('/listings/create');
+		}
+	};
+	const handleFindListings = () => {
+		navigate('/listings');
+	};
+	const handleViewApplications = () => {
+		if (role === 'tenant') {
+			navigate('/my-applications');
+		} else if (role === 'lessor') {
+			navigate('/dashboard');
+		} else {
+			dispatch(errorAlert('You must be logged in to view your applications'));
+			navigate('/login');
+		}
 	};
 	return (
 		<div className="homepage">
@@ -30,26 +57,54 @@ const Home: React.FC<{}> = () => {
 				</div>
 			</div>
 			<div className="homepage__cards-container">
-				<Card className="homepage__cards-container__card">
-					<CardContent>
-						<button
-							type="button"
-							className="homepage__cards-container__card-btn"
-						>
-							Rent a Home
-						</button>
-					</CardContent>
-				</Card>
-				<Card className="homepage__cards-container__card">
-					<CardContent>
-						<button
-							type="button"
-							className="homepage__cards-container__card-btn"
-						>
-							Rent a Home
-						</button>
-					</CardContent>
-				</Card>
+				{role !== 'lessor' && (
+					<Card className="homepage__cards-container__card">
+						<CardContent className="homepage__cards-container__card-content">
+							<Typography variant="h5" component="p">
+								Rent a Home
+							</Typography>
+							<button
+								type="button"
+								className="homepage__cards-container__card-btn"
+								onClick={handleFindListings}
+							>
+								Rent a Home
+							</button>
+						</CardContent>
+					</Card>
+				)}
+				{role !== 'tenant' && (
+					<Card className="homepage__cards-container__card">
+						<CardContent className="homepage__cards-container__card-content">
+							<Typography variant="h5" component="p">
+								Find Tenants
+							</Typography>
+							<button
+								type="button"
+								className="homepage__cards-container__card-btn"
+								onClick={handleCreateListing}
+							>
+								List Property
+							</button>
+						</CardContent>
+					</Card>
+				)}
+				{role && (
+					<Card className="homepage__cards-container__card">
+						<CardContent className="homepage__cards-container__card-content">
+							<Typography variant="h5" component="p">
+								{role === 'tenant' ? 'My ' : ''}Applications
+							</Typography>
+							<button
+								type="button"
+								className="homepage__cards-container__card-btn"
+								onClick={handleViewApplications}
+							>
+								View Applications
+							</button>
+						</CardContent>
+					</Card>
+				)}
 			</div>
 		</div>
 	);
