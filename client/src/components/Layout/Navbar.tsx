@@ -14,10 +14,10 @@ import {
 	Stack,
 	Typography,
 } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
 import { handleError, logout } from 'utils/api-calls';
 import { unsetUser } from 'store/user';
 import { errorAlert } from 'store/alert';
+import { useAppDispatch, useAppSelector } from 'hooks';
 import Logo from './logo.png';
 
 const pages = [
@@ -27,21 +27,21 @@ const pages = [
 	},
 ];
 
-function Navbar() {
+const Navbar = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	const [anchorElUser, setAnchorElUser] = React.useState(null);
+	const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
+		null
+	);
 
-	const user = useSelector((state) => state.user.value);
+	const user = useAppSelector((state) => state.user.value);
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
-	const isLoggedIn = React.useMemo(() => {
-		return user !== null;
-	}, [user]);
+	const isLoggedIn = user !== null;
 
-	const handleOpenUserMenu = (event) => {
+	const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorElUser(event.currentTarget);
 	};
 
@@ -204,5 +204,5 @@ function Navbar() {
 			</Container>
 		</AppBar>
 	);
-}
+};
 export default Navbar;

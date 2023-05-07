@@ -1,21 +1,21 @@
 import { Container } from '@mui/material';
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { autoLogin } from 'utils/helpers';
 import Loader from 'components/Loader';
 import Alert from 'components/Alert';
 import { useLoadScript } from '@react-google-maps/api';
+import { useAppDispatch, useAppSelector } from 'hooks';
 import Navbar from './Navbar';
 
-const libraries = ['places'];
+const libraries: ['places'] = ['places'];
 
-function Layout({ children }) {
+const Layout: React.FC<{ children: JSX.Element }> = ({ children }) => {
 	const { isLoaded } = useLoadScript({
-		googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+		googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY!,
 		libraries,
 	});
-	const appInitialized = useSelector((state) => state.app.appInitialized);
-	const dispatch = useDispatch();
+	const appInitialized = useAppSelector((state) => state.app.appInitialized);
+	const dispatch = useAppDispatch();
 	useEffect(() => {
 		if (!appInitialized) autoLogin(dispatch);
 	}, [appInitialized, dispatch]);
@@ -33,6 +33,6 @@ function Layout({ children }) {
 			<Alert />
 		</>
 	);
-}
+};
 
 export default Layout;
