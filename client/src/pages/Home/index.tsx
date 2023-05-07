@@ -9,10 +9,11 @@ import { errorAlert } from 'store/alert';
 
 const Home: React.FC<{}> = () => {
 	const navigate = useNavigate();
-	const handleSearch = (location: Suggestion) => {
-		navigate('/listings', {
-			state: { location },
-		});
+	const handleSearch = (location: Suggestion | null) => {
+		if (location)
+			navigate('/listings', {
+				state: { location },
+			});
 	};
 	const dispatch = useAppDispatch();
 	const role = useAppSelector((state) => state.user.value?.role);
