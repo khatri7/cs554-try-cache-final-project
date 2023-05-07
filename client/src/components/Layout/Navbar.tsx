@@ -173,9 +173,17 @@ const Navbar = () => {
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
+												navigate('/my-profile');
+											}}
+										>
+											<Typography textAlign="center">My Profile</Typography>
+										</MenuItem>
+										<MenuItem
+											onClick={async () => {
+												handleCloseUserMenu();
 												try {
-													await logout();
 													navigate('/');
+													await logout();
 													dispatch(unsetUser());
 												} catch (e) {
 													let error = 'Unexpected error occurred';

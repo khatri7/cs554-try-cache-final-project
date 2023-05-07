@@ -144,3 +144,10 @@ export const makePayment = (applicationId: string) =>
 	POST(
 		`/applications/${applicationId}/payment?successUrl=${window.location.href}&cancelUrl=${window.location.href}`
 	);
+
+export const updateUser = (
+	userId: string,
+	updateUserObj: {
+		[key: string]: string;
+	}
+) => PATCH(`/users/${userId}`, updateUserObj);

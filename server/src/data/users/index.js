@@ -108,7 +108,7 @@ export const updateUserDetails = async (
 	const user = await getUserById(id);
 	const updatedUser = {
 		...user,
-		updateUserObj,
+		...updateUserObj,
 	};
 	delete updatedUser._id;
 	const updateUserAck = await usersCollection.updateOne(
