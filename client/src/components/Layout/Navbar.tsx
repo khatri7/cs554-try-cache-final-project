@@ -146,26 +146,30 @@ const Navbar = () => {
 										open={Boolean(anchorElUser)}
 										onClose={handleCloseUserMenu}
 									>
-										<MenuItem
-											onClick={async () => {
-												handleCloseUserMenu();
-												navigate('/my-applications');
-											}}
-										>
-											<Typography textAlign="center">
-												My Applications
-											</Typography>
-										</MenuItem>
-
-										<MenuItem
-											onClick={async () => {
-												handleCloseUserMenu();
-												navigate('/dashboard');
-											}}
-										>
-											<Typography textAlign="center">View Dashboard</Typography>
-										</MenuItem>
-
+										{user.role === 'lessor' && (
+											<MenuItem
+												onClick={async () => {
+													handleCloseUserMenu();
+													navigate('/dashboard');
+												}}
+											>
+												<Typography textAlign="center">
+													View Dashboard
+												</Typography>
+											</MenuItem>
+										)}
+										{user.role === 'tenant' && (
+											<MenuItem
+												onClick={async () => {
+													handleCloseUserMenu();
+													navigate('/my-applications');
+												}}
+											>
+												<Typography textAlign="center">
+													My Applications
+												</Typography>
+											</MenuItem>
+										)}
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
