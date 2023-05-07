@@ -29,5 +29,10 @@
 		"eslint-plugin-import": "^2.27.5",
 		"eslint-plugin-prettier": "^4.2.1",
 		"prettier": "^2.8.6"
+	},
+	"dependencies": {
+		"react-material-ui-carousel": "^3.4.2",
+		"react-slick": "^0.29.0",
+		"slick-carousel": "^1.8.1"
 	}
 }

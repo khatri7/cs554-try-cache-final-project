@@ -47,7 +47,6 @@ function CreateListing() {
 	const handleChange = (event) => {
 		setIsDisabled(false);
 		const { name, value, type } = event.target;
-		setIsDisabled(false);
 		setFormValues({
 			...formValues,
 			[name]: type === 'number' ? parseInt(value, 10) : value,
@@ -93,9 +92,9 @@ function CreateListing() {
 				sx={{
 					minHeight: '60vh',
 					display: 'flex',
-					flexDirection: 'column',
+					flexDirection: 'row',
 					alignItems: 'center',
-					justifyContent: 'center',
+					justifyContent: 'between',
 					gap: 4,
 				}}
 			>
