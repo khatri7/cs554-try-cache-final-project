@@ -182,8 +182,8 @@ const Navbar = () => {
 											onClick={async () => {
 												handleCloseUserMenu();
 												try {
-													await logout();
 													navigate('/');
+													await logout();
 													dispatch(unsetUser());
 												} catch (e) {
 													let error = 'Unexpected error occurred';
