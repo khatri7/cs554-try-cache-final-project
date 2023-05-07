@@ -15,7 +15,7 @@ const router = express.Router();
 router.route('/:id').patch(
 	authenticateToken,
 	reqHandlerWrapper(async (req, res) => {
-		const { id } = req.query;
+		const { id } = req.params;
 		const userId = isValidObjectId(id);
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);

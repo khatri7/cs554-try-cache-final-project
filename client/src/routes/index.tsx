@@ -16,6 +16,7 @@ import {
 	useLocation,
 } from 'react-router-dom';
 import { useAppSelector } from 'hooks';
+import MyProfile from 'pages/MyProfile';
 import ProtectedRoutes from './ProtectedRoutes';
 
 function Routes() {
@@ -46,6 +47,7 @@ function Routes() {
 			</Route>
 			<Route element={<ProtectedRoutes />}>
 				<Route path="/applications/:id" element={<SingleApplication />} />
+				<Route path="/my-profile" element={<MyProfile />} />
 			</Route>
 		</RRDRoutes>
 	);
