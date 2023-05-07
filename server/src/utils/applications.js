@@ -1,3 +1,4 @@
+import xss from 'xss';
 import {
 	badRequestErr,
 	isValidObj,
@@ -18,12 +19,12 @@ export const isValidCreateApplicationObj = (applicaitonObj) => {
 	if (!isValidObj(applicaitonObj))
 		throw badRequestErr('Expected a Application object');
 
-	const notes = applicaitonObj.notes
+	const notes = xss(applicaitonObj.notes)
 		? isValidStr(applicaitonObj.notes, 'Notes')
 		: '';
 
 	return {
-		listingId: isValidObjectId(applicaitonObj.listingId, 'Listing Id'),
+		listingId: isValidObjectId(xss(applicaitonObj.listingId), 'Listing Id'),
 		notes,
 	};
 };

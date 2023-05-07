@@ -1,4 +1,5 @@
 import moment from 'moment';
+import xss from 'xss';
 import {
 	badRequestErr,
 	isValidLaundry,
@@ -11,7 +12,7 @@ import {
 import { isValidDateStr } from './users';
 
 const isValidAvailabilityDate = (dateStr) => {
-	const momentDate = isValidDateStr(dateStr, 'Availability Date');
+	const momentDate = isValidDateStr(xss(dateStr), 'Availability Date');
 	if (!momentDate.isValid()) throw badRequestErr('Invalid Availability Date');
 	const difference = moment().diff(momentDate, 'days');
 	if (difference > 0)
@@ -26,16 +27,16 @@ export const isValidCreateListingObj = (listingObj) => {
 	if (!isValidObj(listingObj.location)) throw badRequestErr('Invalid location');
 	return {
 		apt: listingObj.apt ? isValidNum(listingObj.apt, 'Apt', 'min', 1) : null,
-		description: isValidStr(listingObj.description, 'Description'),
+		description: isValidStr(xss(listingObj.description), 'Description'),
 		bedrooms: isValidNum(listingObj.bedrooms, 'Bedrooms', 'min', 0),
 		bathrooms: isValidNum(listingObj.bathrooms, 'Bathrooms', 'min', 1),
 		rent: isValidNum(listingObj.rent, 'Rent', 'min', 100),
 		deposit: isValidNum(listingObj.deposit, 'Deposit', 'min', 0),
 		availabilityDate: isValidAvailabilityDate(listingObj.availabilityDate),
 		location: listingObj.location,
-		laundry: isValidLaundry(listingObj.laundry),
-		petPolicy: isValidPetPolicy(listingObj.petPolicy),
-		parking: isValidParking(listingObj.parking),
+		laundry: isValidLaundry(xss(listingObj.laundry)),
+		petPolicy: isValidPetPolicy(xss(listingObj.petPolicy)),
+		parking: isValidParking(xss(listingObj.parking)),
 		squareFoot: isValidNum(listingObj.squareFoot, 'SquareFoot', 'min', 100),
 	};
 };
@@ -73,7 +74,7 @@ export const isValidUpdateListingObj = (listingObj) => {
 	if (!isValidObj(listingObj)) throw badRequestErr('Expected a listing object');
 	return {
 		description: listingObj.description
-			? isValidStr(listingObj.description, 'Description')
+			? isValidStr(xss(listingObj.description), 'Description')
 			: null,
 		rent: listingObj.rent
 			? isValidNum(listingObj.rent, 'Rent', 'min', 100)
@@ -82,7 +83,7 @@ export const isValidUpdateListingObj = (listingObj) => {
 			? isValidNum(listingObj.deposit, 'Deposit', 'min', 0)
 			: null,
 		availabilityDate: listingObj.availabilityDate
-			? isValidAvailabilityDate(listingObj.availabilityDate)
+			? isValidAvailabilityDate(xss(listingObj.availabilityDate))
 			: null,
 		occupied: listingObj.occupied ? listingObj.occupied : null,
 	};
