@@ -37,6 +37,7 @@
 		"eject": "react-scripts eject"
 	},
 	"devDependencies": {
+		"@types/autosuggest-highlight": "^3.2.0",
 		"@types/node": "^18.16.3",
 		"@types/react": "^18.2.2",
 		"@types/react-dom": "^18.2.3",
@@ -132,7 +133,9 @@
 				],
 				"rules": {
 					"react/function-component-definition": "off",
-					"no-underscore-dangle": "off"
+					"no-underscore-dangle": "off",
+					"react/require-default-props": "off",
+					"react/jsx-props-no-spreading": "off"
 				}
 			}
 		]

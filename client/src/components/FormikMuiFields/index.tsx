@@ -7,16 +7,20 @@ import {
 	InputLabel,
 	TextareaAutosize,
 	FormLabel,
+	TextFieldProps,
+	SelectProps,
+	TextareaAutosizeProps,
 } from '@mui/material';
+import { FieldProps } from 'formik';
 import React from 'react';
 
-export function TextInput({
+export const TextInput: React.FC<FieldProps & TextFieldProps> = ({
 	field: { name, value, onChange, onBlur },
 	form: { errors, touched },
 	label,
 	required = false,
 	...rest
-}) {
+}) => {
 	return (
 		<FormControl fullWidth>
 			<TextField
@@ -27,22 +31,30 @@ export function TextInput({
 				onChange={onChange}
 				onBlur={onBlur}
 				error={touched[name] && Boolean(errors[name])}
-				helperText={touched[name] && errors[name]}
+				helperText={touched[name] && (errors[name] as string)}
 				required={required}
 				{...rest}
 			/>
 		</FormControl>
 	);
-}
+};
 
-export function Select({
+export const Select: React.FC<
+	FieldProps &
+		SelectProps & {
+			options: Array<{
+				value: any;
+				label: string;
+			}>;
+		}
+> = ({
 	field: { name, value, onChange, onBlur },
 	form: { errors, touched },
 	label,
 	required = false,
 	options,
 	...rest
-}) {
+}) => {
 	return (
 		<FormControl fullWidth required={required}>
 			<InputLabel>{label}</InputLabel>
@@ -61,24 +73,28 @@ export function Select({
 				))}
 			</MuiSelect>
 			<FormHelperText error={touched[name] && Boolean(errors[name])}>
-				{touched[name] && errors[name]}
+				{touched[name] && (errors[name] as string)}
 			</FormHelperText>
 		</FormControl>
 	);
-}
+};
 
-export function TextArea({
+export const TextArea: React.FC<
+	FieldProps &
+		TextareaAutosizeProps & {
+			label: string;
+		}
+> = ({
 	field: { name, value, onChange, onBlur },
 	form,
 	label,
 	required = false,
 	...rest
-}) {
+}) => {
 	return (
 		<FormControl fullWidth>
 			<FormLabel>{label}</FormLabel>
 			<TextareaAutosize
-				variant="outlined"
 				name={name}
 				value={value}
 				onChange={onChange}
@@ -91,4 +107,4 @@ export function TextArea({
 			/>
 		</FormControl>
 	);
-}
+};
