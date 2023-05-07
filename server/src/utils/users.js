@@ -193,3 +193,21 @@ export const isValidUserAuthObj = (userAuthObjParam) => ({
 	email: isValidEmail(xss(userAuthObjParam.email)),
 	role: isValidUserRole(xss(userAuthObjParam.role)),
 });
+
+export const isValidUserUpdateObj = (userUpdateObjParam) => {
+	isValidObj(userUpdateObjParam);
+	const validatedObj = {};
+	if (userUpdateObjParam.firstName)
+		validatedObj.firstName = isValidName(
+			userUpdateObjParam.firstName,
+			'First Name'
+		);
+	if (userUpdateObjParam.lastName)
+		validatedObj.lastName = isValidName(
+			userUpdateObjParam.lastName,
+			'Last Name'
+		);
+	if (userUpdateObjParam.phone)
+		validatedObj.phone = isValidPhone(userUpdateObjParam.phone);
+	return validatedObj;
+};
