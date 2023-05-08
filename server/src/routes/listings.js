@@ -48,22 +48,17 @@ router
 	)
 	.get(
 		reqHandlerWrapper(async (req, res) => {
-			try {
-				const { north, east, south, west, placeId, formattedAddress } =
-					req.query;
-				const searchArea = isValidSearchAreaQuery({
-					north,
-					east,
-					south,
-					west,
-					placeId,
-					formattedAddress,
-				});
-				const listings = await getListings(searchArea);
-				res.json({ listings });
-			} catch (e) {
-				console.log(e);
-			}
+			const { north, east, south, west, placeId, formattedAddress } = req.query;
+			const searchArea = isValidSearchAreaQuery({
+				north,
+				east,
+				south,
+				west,
+				placeId,
+				formattedAddress,
+			});
+			const listings = await getListings(searchArea);
+			res.json({ listings });
 		})
 	);
 
@@ -84,11 +79,8 @@ router.route('/mylistings').get(
 router
 	.route('/:id')
 	.get(
-		authenticateToken,
 		reqHandlerWrapper(async (req, res) => {
-			const { user } = req;
 			const listingId = req.params.id;
-			isValidUserAuthObj(user);
 			const listing = await getListingById(listingId);
 			res.status(successStatusCodes.OK).json({ listing });
 		})
