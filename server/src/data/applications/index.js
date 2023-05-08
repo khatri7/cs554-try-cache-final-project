@@ -222,7 +222,7 @@ export const approveApplication = async (
 	const noteObj = application.notes;
 	noteObj[applicationStatus.APPROVED] = { text };
 	const updatedAt = new Date();
-	let terms;
+	let terms = null;
 	if (termsParam) {
 		if (termsParam.mimetype !== 'application/pdf')
 			throw badRequestErr('Terms And Conditions has to be of type PDF');
