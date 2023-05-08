@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import {
 	Box,
 	Button,
@@ -7,16 +6,16 @@ import {
 	FormLabel,
 	Grid,
 	Modal,
-	Paper,
 	Radio,
 	RadioGroup,
+	Stack,
 	TextField,
 	Typography,
 } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { errorAlert } from 'store/alert';
@@ -26,6 +25,13 @@ import toast, { Toaster } from 'react-hot-toast';
 // import 'slick-carousel/slick/slick.css';
 // import 'slick-carousel/slick/slick-theme.css';
 import Carousel from 'react-material-ui-carousel';
+import NoImage from 'components/ListingCard/no-image.jpeg';
+import { useAppSelector } from 'hooks';
+import { formatter } from 'components/ListingCard';
+import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
+import LocalParkingIcon from '@mui/icons-material/LocalParking';
+import PetsIcon from '@mui/icons-material/Pets';
+import { Delete, Edit } from '@mui/icons-material';
 
 const style = {
 	position: 'absolute',
@@ -39,45 +45,44 @@ const style = {
 	p: 4,
 };
 
-export const listingToBeShown = (listing) => {
+function ListingToBeShown({ listing }) {
 	const {
+		apt,
 		bedrooms,
 		bathrooms,
 		deposit,
 		description,
 		location,
-		occupied,
+		// occupied,
 		rent,
 		photos,
 		parking,
-		laundry,
 		petPolicy,
 		squareFoot,
-	} = listing.listing;
+	} = listing;
+	const listingPhotos = photos.filter((photo) => photo !== null);
+	const laundry = useMemo(() => {
+		if (listing.laundry === 'inunit') return 'In-Unit';
+		if (listing.laundry === 'shared') return 'Shared';
+		return 'Not Available';
+	}, [listing.laundry]);
 	return (
-		<Paper>
-			<Grid container spacing={2}>
+		<Box>
+			<Grid container spacing={4}>
 				<Grid item xs={12} sm={6}>
-					<Carousel>
-						{photos.length > 0 ? (
-							photos.map((i) =>
-								i != null ? (
-									<img
-										src={i}
-										alt={location.name}
-										style={{ width: '100%', height: 'auto' }}
-									/>
-								) : (
-									<img
-										src="https://www.friendlyfoodqatar.com/mt-content/uploads/2017/04/no-image.jpg"
-										alt={location.name}
-										style={{ width: '100%', height: 'auto' }}
-									/>
-								)
-							)
+					<Carousel height={400} animation="slide">
+						{listingPhotos.length > 0 ? (
+							listingPhotos.map((photo) => (
+								<img
+									src={photo}
+									alt={location.name}
+									style={{ height: '100%', objectFit: 'contain' }}
+									key={photo}
+								/>
+							))
 						) : (
 							<img
-								src="https://www.friendlyfoodqatar.com/mt-content/uploads/2017/04/no-image.jpg"
+								src={NoImage}
 								alt={location.name}
 								style={{ width: '100%', height: 'auto' }}
 							/>
@@ -85,50 +90,64 @@ export const listingToBeShown = (listing) => {
 					</Carousel>
 				</Grid>
 				<Grid item xs={12} sm={6}>
-					<Typography variant="h4" gutterBottom>
-						Location:{location.name}
+					<Typography gutterBottom variant="h4" component="p" sx={{ mt: 1 }}>
+						{formatter.format(rent)}/mo
 					</Typography>
-					<Typography variant="subtitle1" gutterBottom>
-						Address:{location.name}
+					{apt && (
+						<Typography variant="h5" component="p">
+							Apt {apt}
+						</Typography>
+					)}
+					<Typography variant="h5" component="p" gutterBottom>
+						{location?.streetAddress}
 					</Typography>
-					<Typography variant="h5" gutterBottom>
-						{`Rent:${rent}/mo`}
+					<Typography gutterBottom fontSize="1.2rem">
+						<span style={{ fontWeight: 'bold' }}>{bedrooms}</span> bd |{' '}
+						<span style={{ fontWeight: 'bold' }}>{bathrooms}</span> ba |{' '}
+						<span style={{ fontWeight: 'bold' }}>{squareFoot || '--'}</span>{' '}
+						sqft
 					</Typography>
-					<Typography
-						variant="subtitle1"
-						gutterBottom
-					>{`${bedrooms} BR / ${bathrooms} BA`}</Typography>
-					<Typography
-						variant="subtitle1"
-						gutterBottom
-					>{`SquareFoot: ${squareFoot} sq.ft.`}</Typography>
-					<Typography
-						variant="subtitle1"
-						gutterBottom
-					>{`Deposit: $${deposit}`}</Typography>
-					<Typography variant="subtitle1" gutterBottom>{`Occupied: ${
-						occupied ? 'Yes' : 'No'
-					}`}</Typography>
-					<Typography variant="body1" gutterBottom>
-						Description:{description}
+					<Typography gutterBottom fontSize="1.2rem" sx={{ mb: 4 }}>
+						<span style={{ fontWeight: 'bold' }}>Deposit: </span>{' '}
+						{deposit ? formatter.format(deposit) : 'N/A'}
 					</Typography>
-					<Typography
-						variant="subtitle1"
-						gutterBottom
-					>{`Parking: ${parking}`}</Typography>
-					<Typography
-						variant="subtitle1"
-						gutterBottom
-					>{`Laundry: ${laundry}`}</Typography>
-					<Typography
-						variant="subtitle1"
-						gutterBottom
-					>{`Pet Policy: ${petPolicy}`}</Typography>
+					<Stack direction="row" gap={1} alignItems="center" sx={{ mb: 1 }}>
+						<LocalLaundryServiceIcon />
+						<Typography fontSize="1.1rem">
+							<span style={{ fontWeight: 'bold' }}>Laundry:</span> {laundry}
+						</Typography>
+					</Stack>
+					<Stack direction="row" gap={1} alignItems="center" sx={{ mb: 1 }}>
+						<LocalParkingIcon />
+						<Typography fontSize="1.1rem">
+							<span style={{ fontWeight: 'bold' }}>Parking:</span>{' '}
+							{parking === 'available' ? 'Available' : 'Not Available'}
+						</Typography>
+					</Stack>
+					<Stack direction="row" gap={1} alignItems="center">
+						<PetsIcon />
+						<Typography fontSize="1.1rem">
+							<span style={{ fontWeight: 'bold' }}>Pet Policy:</span>{' '}
+							{petPolicy === 'allowed' ? 'Allowed' : 'Not Allowed'}
+						</Typography>
+					</Stack>
 				</Grid>
 			</Grid>
-		</Paper>
+			<Typography
+				gutterBottom
+				sx={{ mt: 2 }}
+				variant="h4"
+				component="p"
+				fontWeight="light"
+			>
+				Description
+			</Typography>
+			<Typography fontSize="1.1rem">
+				{description.trim() ? description.trim() : 'No Description'}
+			</Typography>
+		</Box>
 	);
-};
+}
 
 function SingleListing() {
 	const navigate = useNavigate();
@@ -148,6 +167,7 @@ function SingleListing() {
 	});
 	const [currListing, setCurrListing] = useState();
 	const [isDisabled, setIsDisabled] = useState(false);
+	const user = useAppSelector((state) => state.user.value);
 
 	useEffect(() => {
 		async function getListing() {
@@ -212,42 +232,28 @@ function SingleListing() {
 		}
 	};
 
+	const isOwner =
+		user && currListing?.listing && currListing.listing.listedBy === user._id;
+
 	return (
 		<div>
-			<div
-				style={{
-					position: 'absolute',
-					top: '0',
-					bottom: '0',
-					left: '0',
-					right: '0',
-					width: '40%',
-					height: '40%',
-					margin: 'auto',
-					textAlign: 'center',
-				}}
-			>
-				<listingToBeShown />
-			</div>
 			<Toaster />
-			<Button
-				variant="contained"
-				onClick={() => {
-					navigate(`/listings/${id}/application`);
-				}}
-			>
-				Apply
-			</Button>
-			<Button variant="contained" component="label" onClick={handleOpen}>
-				Update Listing
-			</Button>
-			<Button
-				variant="contained"
-				component="label"
-				onClick={handleDeleteModalOpen}
-			>
-				Delete Listing
-			</Button>
+			{isOwner && (
+				<Stack direction="row" gap={4} sx={{ mb: 2 }} justifyContent="flex-end">
+					<Button variant="outlined" startIcon={<Edit />} onClick={handleOpen}>
+						Update Listing
+					</Button>
+					<Button
+						variant="outlined"
+						color="error"
+						startIcon={<Delete />}
+						onClick={handleDeleteModalOpen}
+					>
+						Delete Listing
+					</Button>
+				</Stack>
+			)}
+
 			<Modal
 				open={open}
 				onClose={handleSubmit}
@@ -350,7 +356,21 @@ function SingleListing() {
 					</Button>
 				</Box>
 			</Modal>
-			<Box>{currListing && listingToBeShown(currListing)}</Box>
+			<Box>
+				{currListing && <ListingToBeShown listing={currListing.listing} />}
+			</Box>
+			{user?.role === 'tenant' && (
+				<Button
+					variant="contained"
+					sx={{ mt: 4 }}
+					size="large"
+					onClick={() => {
+						navigate(`/listings/${id}/application`);
+					}}
+				>
+					Apply
+				</Button>
+			)}
 		</div>
 	);
 }
