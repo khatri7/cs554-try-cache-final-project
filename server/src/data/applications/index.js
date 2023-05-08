@@ -348,3 +348,12 @@ export const updatePaymentStatus = async (
 	);
 	return updatedApplication;
 };
+
+export const deleteApplications = async (listingId) => {
+	const id = isValidObjectId(listingId);
+	const applicationCollection = await applications();
+	const updatedAppCol = await applicationCollection.deleteMany({
+		'listing._id': new ObjectId(id),
+	});
+	return updatedAppCol;
+};

@@ -157,7 +157,7 @@ export const isValidNum = (
 	compareOp?: 'min' | 'max' | 'equal',
 	compareVal?: number
 ): boolean => {
-	if (!num) return false;
+	if (num === undefined) return false;
 	if (typeof num !== 'number' || !Number.isFinite(num)) return false;
 	// if (!/^\d+$/.test(num)) return false;
 	if (compareOp && compareVal) {

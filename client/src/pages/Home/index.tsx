@@ -18,7 +18,7 @@ const Home: React.FC<{}> = () => {
 	const dispatch = useAppDispatch();
 	const role = useAppSelector((state) => state.user.value?.role);
 	const handleCreateListing = () => {
-		if (role !== 'tenant') {
+		if (role !== 'lessor') {
 			dispatch(
 				errorAlert('You need to be logged in as a lessor to create a listing')
 			);

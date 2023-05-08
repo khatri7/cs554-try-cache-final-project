@@ -118,7 +118,8 @@ export const isValidStr = (strParam, varName, compareOp, compareVal) => {
 };
 
 export const isValidNum = (num, varName, compareOp, compareVal) => {
-	if (!num) throw badRequestErr(`You need to provide a ${varName}`);
+	if (num === undefined)
+		throw badRequestErr(`You need to provide a ${varName}`);
 	if (typeof num !== 'number' || !Number.isFinite(num))
 		throw badRequestErr(`${varName} should be of type number`);
 	if (compareOp && compareVal) {

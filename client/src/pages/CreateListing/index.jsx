@@ -1,11 +1,6 @@
 import PlacesAutocomplete from 'components/PlacesAutocomplete';
 import React, { useState } from 'react';
-import {
-	getLocationDetails,
-	isValidBedBath,
-	isValidNum,
-	isValidStr,
-} from 'utils/helpers';
+import { getLocationDetails, isValidNum, isValidStr } from 'utils/helpers';
 import {
 	Box,
 	Button,
@@ -15,6 +10,7 @@ import {
 	FormLabel,
 	RadioGroup,
 	Radio,
+	Stack,
 } from '@mui/material';
 import { POST, handleError } from 'utils/api-calls';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -34,12 +30,12 @@ function CreateListing() {
 		bathrooms: '',
 		squareFoot: '',
 		rent: '',
-		deposit: '',
+		deposit: 0,
 		petPolicy: '',
 		laundry: '',
 		parking: '',
 		availabilityDate: null,
-		location: {},
+		location: null,
 	});
 
 	const [isDisabled, setIsDisabled] = useState(false);
@@ -47,7 +43,6 @@ function CreateListing() {
 	const handleChange = (event) => {
 		setIsDisabled(false);
 		const { name, value, type } = event.target;
-		setIsDisabled(false);
 		setFormValues({
 			...formValues,
 			[name]: type === 'number' ? parseInt(value, 10) : value,
@@ -59,6 +54,7 @@ function CreateListing() {
 			setIsDisabled(true);
 			event.preventDefault();
 			const {
+				location,
 				apt,
 				description,
 				bedrooms,
@@ -67,15 +63,20 @@ function CreateListing() {
 				rent,
 				deposit,
 			} = formValues;
-			isValidStr(description);
-			isValidNum(apt, 'min', 1);
-			isValidNum(bedrooms, 'min', 0);
-			isValidNum(bathrooms, 'min', 1);
-			isValidBedBath(bedrooms);
-			isValidBedBath(bathrooms);
-			isValidNum(rent, 'min', 100);
-			isValidNum(deposit, 'min', 0);
-			isValidNum(squareFoot, 'min', 100);
+			if (!location) throw new Error('Street Address is required');
+			if (description.trim() && !isValidStr(description))
+				throw new Error('Invalid Description');
+			if (apt !== '' && !isValidNum(apt, 'min', 1))
+				throw new Error('Invalid Apartment');
+			if (!isValidNum(bedrooms, 'min', 0) || !isValidNum(bedrooms, 'max', 20))
+				throw new Error('Invalid Bedrooms, should be between 0-20');
+			if (!isValidNum(bathrooms, 'min', 1) || !isValidNum(bathrooms, 'max', 20))
+				throw new Error('Invalid Bathrooms, should be between 1-20');
+			if (!isValidNum(rent, 'min', 100))
+				throw new Error('Invalid Rent, should at least 100');
+			if (!isValidNum(deposit, 'min', 0)) throw new Error('Invalid Deposit');
+			if (squareFoot !== '' && !isValidNum(squareFoot, 'min', 100))
+				throw new Error('Invalid area, should be at least 100 sq.ft');
 			const res = await POST('/listings', formValues);
 			if (res && res.listing._id) {
 				navigate(`/listings/${res.listing._id}`);
@@ -84,44 +85,39 @@ function CreateListing() {
 			let error = 'Unexpected error occurred';
 			if (typeof handleError(e) === 'string') error = handleError(e);
 			dispatch(errorAlert(error));
+		} finally {
+			setIsDisabled(false);
 		}
 	};
 
 	return (
 		<Box>
-			<Box
-				sx={{
-					minHeight: '60vh',
-					display: 'flex',
-					flexDirection: 'column',
-					alignItems: 'center',
-					justifyContent: 'center',
-					gap: 4,
-				}}
-			>
-				<form onSubmit={handleSubmit}>
-					<Box
-						sx={{
-							display: 'flex',
-							flexDirection: 'column',
-							alignItems: 'center',
-							justifyContent: 'center',
-							gap: 2,
-							minWidth: '500px',
+			<form onSubmit={handleSubmit}>
+				<Box
+					sx={{
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'center',
+						justifyContent: 'center',
+						gap: 4,
+						minWidth: '500px',
+					}}
+				>
+					<PlacesAutocomplete
+						name="location"
+						label="Street Address *"
+						onChange={async (location) => {
+							const formattedLocation = await getLocationDetails(location);
+							formValues.location = formattedLocation;
 						}}
-					>
+					/>
+					<Stack direction="row" gap={4} sx={{ width: '100%' }}>
 						<TextField
-							required
 							name="apt"
+							fullWidth
 							type="number"
 							label="Apartment Number"
 							value={formValues.apt}
-							onChange={handleChange}
-						/>
-						<TextField
-							name="description"
-							label="Description"
-							value={formValues.description}
 							onChange={handleChange}
 						/>
 						<TextField
@@ -129,6 +125,7 @@ function CreateListing() {
 							type="number"
 							name="bedrooms"
 							label="Bedrooms"
+							fullWidth
 							value={formValues.bedrooms}
 							onChange={handleChange}
 						/>
@@ -137,16 +134,29 @@ function CreateListing() {
 							type="number"
 							name="bathrooms"
 							label="Bathrooms"
+							fullWidth
 							value={formValues.bathrooms}
 							onChange={handleChange}
 						/>
 						<TextField
 							type="number"
 							name="squareFoot"
-							label="Square foot in sq.ft"
+							label="Area (sq.ft)"
 							value={formValues.squareFoot}
 							onChange={handleChange}
+							fullWidth
 						/>
+					</Stack>
+					<TextField
+						name="description"
+						label="Description"
+						multiline
+						minRows={4}
+						fullWidth
+						value={formValues.description}
+						onChange={handleChange}
+					/>
+					<Stack direction="row" gap={4} sx={{ width: '100%' }}>
 						<TextField
 							required
 							type="number"
@@ -154,6 +164,7 @@ function CreateListing() {
 							label="Rent"
 							value={formValues.rent}
 							onChange={handleChange}
+							fullWidth
 						/>
 						<TextField
 							required
@@ -162,66 +173,8 @@ function CreateListing() {
 							label="Deposit"
 							value={formValues.deposit}
 							onChange={handleChange}
+							fullWidth
 						/>
-						<FormLabel component="legend">Pet Policy</FormLabel>
-						<RadioGroup
-							aria-label="petPolicy"
-							name="petPolicy"
-							value={formValues.petPolicy}
-							onChange={handleChange}
-						>
-							<FormControlLabel
-								value="allowed"
-								control={<Radio />}
-								label="Pets Allowed"
-							/>
-							<FormControlLabel
-								value="notAllowed"
-								control={<Radio />}
-								label="Pets Not Allowed"
-							/>
-						</RadioGroup>
-						<FormLabel component="legend">Laundry</FormLabel>
-						<RadioGroup
-							aria-label="laundry"
-							name="laundry"
-							value={formValues.laundry}
-							onChange={handleChange}
-						>
-							<FormControlLabel
-								value="inunit"
-								control={<Radio />}
-								label="In Unit"
-							/>
-							<FormControlLabel
-								value="shared"
-								control={<Radio />}
-								label="Shared"
-							/>
-							<FormControlLabel
-								value="notavailable"
-								control={<Radio />}
-								label="Not Available"
-							/>
-						</RadioGroup>
-						<FormLabel component="legend">Parking</FormLabel>
-						<RadioGroup
-							aria-label="Parking"
-							name="parking"
-							value={formValues.parking}
-							onChange={handleChange}
-						>
-							<FormControlLabel
-								value="available"
-								control={<Radio />}
-								label="Parking Available"
-							/>
-							<FormControlLabel
-								value="notavailable"
-								control={<Radio />}
-								label="Parking Not Available"
-							/>
-						</RadioGroup>
 						<FormControl fullWidth>
 							<LocalizationProvider dateAdapter={AdapterMoment}>
 								<DatePicker
@@ -240,24 +193,89 @@ function CreateListing() {
 								/>
 							</LocalizationProvider>
 						</FormControl>
-						<PlacesAutocomplete
-							name="location"
-							onChange={async (location) => {
-								const formattedLocation = await getLocationDetails(location);
-								formValues.location = formattedLocation;
-							}}
-						/>
-						<Button
-							variant="contained"
-							color="primary"
-							type="submit"
-							disabled={isDisabled}
-						>
-							Submit
-						</Button>
-					</Box>
-				</form>
-			</Box>
+					</Stack>
+					<Stack direction="row" gap={4} sx={{ width: '100%' }}>
+						<FormControl fullWidth>
+							<FormLabel component="legend">Pet Policy</FormLabel>
+							<RadioGroup
+								aria-label="petPolicy"
+								name="petPolicy"
+								value={formValues.petPolicy}
+								onChange={handleChange}
+							>
+								<FormControlLabel
+									value="allowed"
+									control={<Radio />}
+									label="Pets Allowed"
+								/>
+								<FormControlLabel
+									value="notAllowed"
+									control={<Radio />}
+									label="Pets Not Allowed"
+								/>
+							</RadioGroup>
+						</FormControl>
+						<FormControl fullWidth>
+							<FormLabel component="legend">Laundry</FormLabel>
+							<RadioGroup
+								aria-label="laundry"
+								name="laundry"
+								value={formValues.laundry}
+								onChange={handleChange}
+							>
+								<FormControlLabel
+									value="inunit"
+									control={<Radio />}
+									label="In Unit"
+								/>
+								<FormControlLabel
+									value="shared"
+									control={<Radio />}
+									label="Shared"
+								/>
+								<FormControlLabel
+									value="notavailable"
+									control={<Radio />}
+									label="Not Available"
+								/>
+							</RadioGroup>
+						</FormControl>
+						<FormControl fullWidth>
+							<FormLabel component="legend">Parking</FormLabel>
+							<RadioGroup
+								aria-label="Parking"
+								name="parking"
+								value={formValues.parking}
+								onChange={handleChange}
+							>
+								<FormControlLabel
+									value="available"
+									control={<Radio />}
+									label="Parking Available"
+								/>
+								<FormControlLabel
+									value="notavailable"
+									control={<Radio />}
+									label="Parking Not Available"
+								/>
+							</RadioGroup>
+						</FormControl>
+					</Stack>
+					<Button
+						variant="contained"
+						color="primary"
+						type="submit"
+						size="large"
+						sx={{
+							alignSelf: 'flex-end',
+							mt: 6,
+						}}
+						disabled={isDisabled}
+					>
+						Submit
+					</Button>
+				</Box>
+			</form>
 		</Box>
 	);
 }
