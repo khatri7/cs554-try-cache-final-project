@@ -36,11 +36,10 @@ router.route('/my-applications').get(
 	reqHandlerWrapper(async (req, res) => {
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
-		const applicationsW = await getUserApplications(validatedUser);
-		res.json({ applicationsW });
+		const applications = await getUserApplications(validatedUser);
+		res.json({ applications });
 	})
 );
-
 
 router
 	.route('/:id')
@@ -68,7 +67,6 @@ router
 			res.json({ updatedApplications });
 		})
 	);
-
 
 router.route('/:id/payment').post(
 	authenticateToken,
