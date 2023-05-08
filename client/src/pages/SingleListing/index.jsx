@@ -23,8 +23,8 @@ import { errorAlert } from 'store/alert';
 import { DELETE, GET, PATCH, handleError } from 'utils/api-calls';
 import { isValidNum, isValidStr } from 'utils/helpers';
 import toast, { Toaster } from 'react-hot-toast';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+// import 'slick-carousel/slick/slick.css';
+// import 'slick-carousel/slick/slick-theme.css';
 import Carousel from 'react-material-ui-carousel';
 
 const style = {

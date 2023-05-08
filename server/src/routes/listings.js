@@ -74,11 +74,7 @@ router
 		reqHandlerWrapper(async (req, res) => {
 			const { user } = req;
 			const listingId = req.params.id;
-			const validatedUser = isValidUserAuthObj(user);
-			if (validatedUser.role !== 'lessor')
-				throw forbiddenErr(
-					'You cannot update a listing if you have registered as a tenant'
-				);
+			isValidUserAuthObj(user);
 			const listing = await getListingById(listingId);
 			res.status(successStatusCodes.OK).json({ listing });
 		})
