@@ -25,10 +25,21 @@ export const isValidCreateListingObj = (listingObj) => {
 	if (!isValidObj(listingObj)) throw badRequestErr('Expected a listing object');
 	if (!isValidObj(listingObj.location)) throw badRequestErr('Invalid location');
 	return {
-		apt: listingObj.apt ? isValidNum(listingObj.apt, 'Apt', 'min', 1) : null,
-		description: isValidStr(listingObj.description, 'Description'),
-		bedrooms: isValidNum(listingObj.bedrooms, 'Bedrooms', 'min', 0),
-		bathrooms: isValidNum(listingObj.bathrooms, 'Bathrooms', 'min', 1),
+		apt:
+			listingObj.apt !== undefined &&
+			listingObj.apt !== '' &&
+			listingObj.apt !== null
+				? isValidNum(listingObj.apt, 'Apt', 'min', 1)
+				: null,
+		description: listingObj.description?.trim()
+			? isValidStr(listingObj.description, 'Description')
+			: '',
+		bedrooms:
+			isValidNum(listingObj.bedrooms, 'Bedrooms', 'min', 0) &&
+			isValidNum(listingObj.bedrooms, 'Bedrooms', 'max', 20),
+		bathrooms:
+			isValidNum(listingObj.bathrooms, 'Bathrooms', 'min', 1) &&
+			isValidNum(listingObj.bathrooms, 'Bathrooms', 'max', 20),
 		rent: isValidNum(listingObj.rent, 'Rent', 'min', 100),
 		deposit: isValidNum(listingObj.deposit, 'Deposit', 'min', 0),
 		availabilityDate: isValidAvailabilityDate(listingObj.availabilityDate),
@@ -36,7 +47,12 @@ export const isValidCreateListingObj = (listingObj) => {
 		laundry: isValidLaundry(listingObj.laundry),
 		petPolicy: isValidPetPolicy(listingObj.petPolicy),
 		parking: isValidParking(listingObj.parking),
-		squareFoot: isValidNum(listingObj.squareFoot, 'SquareFoot', 'min', 100),
+		squareFoot:
+			listingObj.squareFoot !== undefined &&
+			listingObj.squareFoot !== '' &&
+			listingObj.squareFoot !== null
+				? isValidNum(listingObj.squareFoot, 'SquareFoot', 'min', 100)
+				: null,
 	};
 };
 
