@@ -91,7 +91,7 @@ function Signup() {
 							if (!isValidDateStr(values.dob)) errors.dob = 'Invalid DOB';
 							else if (!isValidDob(values.dob))
 								errors.dob =
-									'Invalid DOB: Should be between 16-100 years in age';
+									'Invalid DOB: Should be between 18-100 years in age';
 						}
 						return errors;
 					}}
@@ -249,7 +249,7 @@ function Signup() {
 									name="dob"
 									component={DatePickerInput}
 									label="Date of Birth"
-									maxDate={moment().subtract(16, 'y')}
+									maxDate={moment().subtract(18, 'y')}
 									required
 								/>
 								<TextField

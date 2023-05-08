@@ -126,8 +126,8 @@ const isValidDob = (dateParam) => {
 	const momentDate = isValidDateStr(dateParam, 'DOB');
 	if (!momentDate.isValid()) throw badRequestErr('Invalid DOB');
 	const difference = moment().diff(momentDate, 'year');
-	if (difference < 16 || difference > 100)
-		throw badRequestErr('Invalid DOB: should be between 12-100 years in age');
+	if (difference < 18 || difference > 100)
+		throw badRequestErr('Invalid DOB: should be between 18-100 years in age');
 	return momentDate.format('MM-DD-YYYY');
 };
 
