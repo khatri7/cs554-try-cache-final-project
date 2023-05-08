@@ -81,7 +81,6 @@ router
 	.get(
 		reqHandlerWrapper(async (req, res) => {
 			const listingId = req.params.id;
-			console.log('here');
 			const listing = await getListingById(listingId);
 			res.status(successStatusCodes.OK).json({ listing });
 		})
