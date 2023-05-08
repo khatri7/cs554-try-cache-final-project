@@ -67,6 +67,20 @@ router
 		})
 	);
 
+router.route('/mylistings').get(
+	authenticateToken,
+	reqHandlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		if (validatedUser.role !== 'lessor')
+			throw forbiddenErr(
+				'You cannot view your listings if you have registered as a tenant'
+			);
+		const listings = await getAllListings(validatedUser);
+		res.json({ listings });
+	})
+);
+
 router
 	.route('/:id')
 	.get(
@@ -108,20 +122,6 @@ router
 			res.status(successStatusCodes.OK).json({ listing });
 		})
 	);
-
-router.route('/mylistings').get(
-	authenticateToken,
-	reqHandlerWrapper(async (req, res) => {
-		const { user } = req;
-		const validatedUser = isValidUserAuthObj(user);
-		if (validatedUser.role !== 'lessor')
-			throw forbiddenErr(
-				'You cannot view your listings if you have registered as a tenant'
-			);
-		const listings = await getAllListings(validatedUser);
-		res.json({ listings });
-	})
-);
 
 router.route('/:id/image').post(
 	authenticateToken,
