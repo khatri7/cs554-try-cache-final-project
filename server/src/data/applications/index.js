@@ -103,7 +103,7 @@ export const createApplication = async (
 			apt,
 			listedBy,
 		},
-		lease: null,
+		terms: null,
 		createdAt: now,
 		updatedAt: now,
 		status: applicationStatus.REVIEW,
@@ -203,7 +203,7 @@ export const approveApplication = async (
 	applicationId,
 	text,
 	user,
-	leaseParam
+	termsParam
 ) => {
 	const validatedUser = isValidUserAuthObj(user);
 
@@ -222,20 +222,22 @@ export const approveApplication = async (
 	const noteObj = application.notes;
 	noteObj[applicationStatus.APPROVED] = { text };
 	const updatedAt = new Date();
-	if (!leaseParam) throw badRequestErr('Lease is required');
-	if (leaseParam.mimetype !== 'application/pdf')
-		throw badRequestErr('Lease has to be of type PDF');
-	const docKey = `applications/${applicationId.toString()}/lease/${
-		leaseParam.originalname
-	}`;
-	const lease = await upload(docKey, leaseParam.buffer, leaseParam.mimetype);
+	let terms = null;
+	if (termsParam) {
+		if (termsParam.mimetype !== 'application/pdf')
+			throw badRequestErr('Terms And Conditions has to be of type PDF');
+		const docKey = `applications/${applicationId.toString()}/terms/${
+			termsParam.originalname
+		}`;
+		terms = await upload(docKey, termsParam.buffer, termsParam.mimetype);
+	}
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
 		{
 			$set: {
 				status: applicationStatus.APPROVED,
 				updatedAt,
-				lease,
+				terms,
 				notes: noteObj,
 			},
 		}
@@ -255,8 +257,7 @@ export const completeApplication = async (
 	applicationId,
 	text,
 	user,
-	documents,
-	signedLease
+	documents
 ) => {
 	const validatedUser = isValidUserAuthObj(user);
 
@@ -287,14 +288,8 @@ export const completeApplication = async (
 			})
 		);
 	}
-	if (!signedLease) throw badRequestErr('Signed lease is required');
-	if (signedLease.mimetype !== 'application/pdf')
-		throw badRequestErr('Lease has to be of type PDF');
-	const docKey = `applications/${applicationId.toString()}/COMPLETED/${
-		signedLease.originalname
-	}`;
-	const lease = await upload(docKey, signedLease.buffer, signedLease.mimetype);
-	noteObj[applicationStatus.COMPLETED] = { text, documents: docsUrl, lease };
+
+	noteObj[applicationStatus.COMPLETED] = { text, documents: docsUrl };
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
 		{

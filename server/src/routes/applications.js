@@ -191,7 +191,7 @@ router.route('/:id/lessor/reject').post(
 
 router.route('/:id/lessor/approve').post(
 	authenticateToken,
-	uploadMedia('lease'),
+	uploadMedia('terms'),
 	reqHandlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
 		let { id } = req.params;
@@ -220,10 +220,6 @@ router.route('/:id/tenant/complete').post(
 	authenticateToken,
 	uploadMedias([
 		{
-			name: 'lease',
-			maxCount: 1,
-		},
-		{
 			name: 'documents',
 			maxCount: 5,
 		},
@@ -239,13 +235,7 @@ router.route('/:id/tenant/complete').post(
 			: '';
 		if (validatedUser.role !== 'tenant')
 			throw forbiddenErr('You cannot update this information as Lessor.');
-		await completeApplication(
-			id,
-			text,
-			validatedUser,
-			req.files.documents,
-			req.files.lease[0]
-		);
+		await completeApplication(id, text, validatedUser, req.files.documents);
 		let redirectUrl = `/applications/${id}/payment?`;
 		if (xss(req.body.successUrl))
 			redirectUrl += `successUrl=${xss(req.body.successUrl)}`;
