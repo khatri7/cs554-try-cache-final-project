@@ -25,14 +25,14 @@ import * as Yup from 'yup';
 const schema = Yup.object().shape({
 	firstName: Yup.string()
 		.required('First name is required')
-		.matches('^[a-zA-Z]*$', 'Invalid First name')
-		.min(3, 'First name must be atleast 3 cahracters')
-		.max(40, 'First name cannot be greater than 40 cahracters'),
+		.matches(/^[a-zA-Z]*$/, 'Invalid First name')
+		.min(3, 'First name must be at least 3 characters')
+		.max(40, 'First name cannot be greater than 40 characters'),
 	lastName: Yup.string()
 		.required('Last name is required')
-		.matches('^[a-zA-Z]*$', 'Invalid Last name')
-		.min(3, 'Last name must be atleast 3 characters')
-		.max(40, 'Last name cannot be greater than 40 cahracters'),
+		.matches(/^[a-zA-Z]*$/, 'Invalid Last name')
+		.min(3, 'Last name must be at least 3 characters')
+		.max(40, 'Last name cannot be greater than 40 characters'),
 	dob: Yup.string('Invalid DOB').required('DOB is required'),
 	phone: Yup.string('Invalid Phone Number')
 		.required('Phone Number is required')
@@ -91,7 +91,7 @@ function Signup() {
 							if (!isValidDateStr(values.dob)) errors.dob = 'Invalid DOB';
 							else if (!isValidDob(values.dob))
 								errors.dob =
-									'Invalid DOB: Should be between 16-100 years in age';
+									'Invalid DOB: Should be between 18-100 years in age';
 						}
 						return errors;
 					}}
@@ -249,7 +249,7 @@ function Signup() {
 									name="dob"
 									component={DatePickerInput}
 									label="Date of Birth"
-									maxDate={moment().subtract(16, 'y')}
+									maxDate={moment().subtract(18, 'y')}
 									required
 								/>
 								<TextField

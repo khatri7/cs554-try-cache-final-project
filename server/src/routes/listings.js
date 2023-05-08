@@ -1,4 +1,5 @@
 import express from 'express';
+import xss from 'xss';
 import { reqHandlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
@@ -47,19 +48,38 @@ router
 	)
 	.get(
 		reqHandlerWrapper(async (req, res) => {
-			const { north, east, south, west, placeId, formattedAddress } = req.query;
-			const searchArea = isValidSearchAreaQuery({
-				north,
-				east,
-				south,
-				west,
-				placeId,
-				formattedAddress,
-			});
-			const listings = await getListings(searchArea);
-			res.json({ listings });
+			try {
+				const { north, east, south, west, placeId, formattedAddress } =
+					req.query;
+				const searchArea = isValidSearchAreaQuery({
+					north,
+					east,
+					south,
+					west,
+					placeId,
+					formattedAddress,
+				});
+				const listings = await getListings(searchArea);
+				res.json({ listings });
+			} catch (e) {
+				console.log(e);
+			}
 		})
 	);
+
+router.route('/mylistings').get(
+	authenticateToken,
+	reqHandlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		if (validatedUser.role !== 'lessor')
+			throw forbiddenErr(
+				'You cannot view your listings if you have registered as a tenant'
+			);
+		const listings = await getAllListings(validatedUser);
+		res.json({ listings });
+	})
+);
 
 router
 	.route('/:id')
@@ -68,11 +88,7 @@ router
 		reqHandlerWrapper(async (req, res) => {
 			const { user } = req;
 			const listingId = req.params.id;
-			const validatedUser = isValidUserAuthObj(user);
-			if (validatedUser.role !== 'lessor')
-				throw forbiddenErr(
-					'You cannot update a listing if you have registered as a tenant'
-				);
+			isValidUserAuthObj(user);
 			const listing = await getListingById(listingId);
 			res.status(successStatusCodes.OK).json({ listing });
 		})
@@ -107,27 +123,13 @@ router
 		})
 	);
 
-router.route('/mylistings').get(
-	authenticateToken,
-	reqHandlerWrapper(async (req, res) => {
-		const { user } = req;
-		const validatedUser = isValidUserAuthObj(user);
-		if (validatedUser.role !== 'lessor')
-			throw forbiddenErr(
-				'You cannot view your listings if you have registered as a tenant'
-			);
-		const listings = await getAllListings(validatedUser);
-		res.json({ listings });
-	})
-);
-
 router.route('/:id/image').post(
 	authenticateToken,
 	uploadMedia('image'),
 	reqHandlerWrapper(async (req, res) => {
 		// update listing by referencing the ID of the Property and the User ID
 		let { id } = req.params;
-		const pos = isValidStr(req.body.position, 'position');
+		const pos = isValidStr(xss(req.body.position), 'position');
 		id = isValidObjectId(id, 'id');
 		if (
 			!isNumberChar(pos) ||
@@ -155,7 +157,7 @@ router.route('/:id/image').delete(
 	authenticateToken,
 	reqHandlerWrapper(async (req, res) => {
 		let { id } = req.params;
-		const pos = isValidStr(req.body.position, 'position');
+		const pos = isValidStr(xss(req.body.position), 'position');
 		if (
 			!isNumberChar(pos) ||
 			Number.parseInt(pos, 10) < 1 ||

@@ -1,4 +1,5 @@
 import express from 'express';
+import xss from 'xss';
 import { reqHandlerWrapper } from './auth';
 import authenticateToken from '../middlewares/auth';
 import { isValidUserAuthObj } from '../utils/users';
@@ -35,8 +36,8 @@ router.route('/my-applications').get(
 	reqHandlerWrapper(async (req, res) => {
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
-		const applicationsW = await getUserApplications(validatedUser);
-		res.json({ applicationsW });
+		const applications = await getUserApplications(validatedUser);
+		res.json({ applications });
 	})
 );
 
@@ -48,7 +49,7 @@ router
 			const { user } = req;
 			const validatedUser = isValidUserAuthObj(user);
 			let { id } = req.params;
-			id = isValidObjectId(id);
+			id = isValidObjectId(xss(id));
 			const application = await getApplicationById(id, validatedUser);
 			res.json({ application });
 		})
@@ -61,7 +62,7 @@ router
 			if (validatedUser.role !== 'lessor')
 				throw forbiddenErr('You cannot delete this if you are not a Lessor.');
 			let { id } = req.params;
-			id = isValidObjectId(id);
+			id = isValidObjectId(xss(id));
 			const updatedApplications = await deleteApplications(id);
 			res.json({ updatedApplications });
 		})
@@ -74,7 +75,7 @@ router.route('/:id/payment').post(
 		// 	throw forbiddenErr('Origin not allowed');
 		const { successUrl, cancelUrl } = req.query;
 		const { id } = req.params;
-		const applicationId = isValidObjectId(id);
+		const applicationId = isValidObjectId(xss(id));
 		const validatedUser = isValidUserAuthObj(req.user);
 		const { firstName, lastName, email, phone } = await getUserById(
 			validatedUser._id
@@ -102,7 +103,7 @@ router.route('/:id/payment/success').get(
 	authenticateToken,
 	reqHandlerWrapper(async (req, res) => {
 		const { id } = req.params;
-		const applicationId = isValidObjectId(id);
+		const applicationId = isValidObjectId(xss(id));
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		const { session_id: sessionId, successUrl } = req.query;
@@ -129,7 +130,7 @@ router.route('/:id/payment/cancel').get(
 	authenticateToken,
 	reqHandlerWrapper(async (req, res) => {
 		const { id } = req.params;
-		const applicationId = isValidObjectId(id);
+		const applicationId = isValidObjectId(xss(id));
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
 		const { session_id: sessionId, cancelUrl } = req.query;
@@ -194,11 +195,11 @@ router.route('/:id/lessor/approve').post(
 	reqHandlerWrapper(async (req, res) => {
 		// update application by referencing the ID of the Property and the User ID
 		let { id } = req.params;
-		id = isValidObjectId(id);
+		id = isValidObjectId(xss(id));
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
-		const text = req.body.text
-			? isValidStr(req.body.text, 'parameter text')
+		const text = xss(req.body.text)
+			? isValidStr(xss(req.body.text), 'parameter text')
 			: '';
 		if (validatedUser.role !== 'lessor')
 			throw forbiddenErr(
@@ -233,7 +234,7 @@ router.route('/:id/tenant/complete').post(
 		id = isValidObjectId(id);
 		const { user } = req;
 		const validatedUser = isValidUserAuthObj(user);
-		const text = req.body.text
+		const text = xss(req.body.text)
 			? isValidStr(req.body.text, 'parameter text')
 			: '';
 		if (validatedUser.role !== 'tenant')
@@ -246,9 +247,11 @@ router.route('/:id/tenant/complete').post(
 			req.files.lease[0]
 		);
 		let redirectUrl = `/applications/${id}/payment?`;
-		if (req.body.successUrl) redirectUrl += `successUrl=${req.body.successUrl}`;
+		if (xss(req.body.successUrl))
+			redirectUrl += `successUrl=${xss(req.body.successUrl)}`;
 		if (req.body.successUrl && req.body.cancelUrl) redirectUrl += '&';
-		if (req.body.cancelUrl) redirectUrl += `cancelUrl=${req.body.cancelUrl}`;
+		if (xss(req.body.cancelUrl))
+			redirectUrl += `cancelUrl=${xss(req.body.cancelUrl)}`;
 		res.redirect(307, redirectUrl);
 	})
 );

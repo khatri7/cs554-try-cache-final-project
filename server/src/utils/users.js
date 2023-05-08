@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import moment from 'moment';
+import xss from 'xss';
 import {
 	badRequestErr,
 	internalServerErr,
@@ -125,8 +126,8 @@ const isValidDob = (dateParam) => {
 	const momentDate = isValidDateStr(dateParam, 'DOB');
 	if (!momentDate.isValid()) throw badRequestErr('Invalid DOB');
 	const difference = moment().diff(momentDate, 'year');
-	if (difference < 16 || difference > 100)
-		throw badRequestErr('Invalid DOB: should be between 12-100 years in age');
+	if (difference < 18 || difference > 100)
+		throw badRequestErr('Invalid DOB: should be between 18-100 years in age');
 	return momentDate.format('MM-DD-YYYY');
 };
 
@@ -169,26 +170,44 @@ const isValidPhone = (phoneParam) => {
 export const isValidUserObj = (userObjParam) => {
 	isValidObj(userObjParam);
 	return {
-		firstName: isValidName(userObjParam.firstName, 'First Name', false),
-		lastName: isValidName(userObjParam.lastName, 'Last Name', false),
-		dob: isValidDob(userObjParam.dob),
-		role: isValidUserRole(userObjParam.role),
-		email: isValidEmail(userObjParam.email),
-		phone: isValidPhone(userObjParam.phone),
-		password: isValidPassword(userObjParam.password),
+		firstName: isValidName(xss(userObjParam.firstName), 'First Name', false),
+		lastName: isValidName(xss(userObjParam.lastName), 'Last Name', false),
+		dob: isValidDob(xss(userObjParam.dob)),
+		role: isValidUserRole(xss(userObjParam.role)),
+		email: isValidEmail(xss(userObjParam.email)),
+		phone: isValidPhone(xss(userObjParam.phone)),
+		password: isValidPassword(xss(userObjParam.password)),
 	};
 };
 
 export const isValidUserLoginObj = (userLoginObjParam) => {
 	isValidObj(userLoginObjParam);
 	return {
-		email: isValidEmail(userLoginObjParam.email),
-		password: isValidPassword(userLoginObjParam.password),
+		email: isValidEmail(xss(userLoginObjParam.email)),
+		password: isValidPassword(xss(userLoginObjParam.password)),
 	};
 };
 
 export const isValidUserAuthObj = (userAuthObjParam) => ({
-	_id: isValidObjectId(userAuthObjParam._id),
-	email: isValidEmail(userAuthObjParam.email),
-	role: isValidUserRole(userAuthObjParam.role),
+	_id: isValidObjectId(xss(userAuthObjParam._id)),
+	email: isValidEmail(xss(userAuthObjParam.email)),
+	role: isValidUserRole(xss(userAuthObjParam.role)),
 });
+
+export const isValidUserUpdateObj = (userUpdateObjParam) => {
+	isValidObj(userUpdateObjParam);
+	const validatedObj = {};
+	if (userUpdateObjParam.firstName)
+		validatedObj.firstName = isValidName(
+			userUpdateObjParam.firstName,
+			'First Name'
+		);
+	if (userUpdateObjParam.lastName)
+		validatedObj.lastName = isValidName(
+			userUpdateObjParam.lastName,
+			'Last Name'
+		);
+	if (userUpdateObjParam.phone)
+		validatedObj.phone = isValidPhone(userUpdateObjParam.phone);
+	return validatedObj;
+};

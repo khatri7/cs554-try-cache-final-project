@@ -3,6 +3,7 @@ import { users } from '../../configs/mongodb';
 import {
 	badRequestErr,
 	createJwt,
+	forbiddenErr,
 	internalServerErr,
 	isValidObjectId,
 	notFoundErr,
@@ -11,8 +12,10 @@ import {
 	comparePassword,
 	hashPassword,
 	isValidEmail,
+	isValidUserAuthObj,
 	isValidUserLoginObj,
 	isValidUserObj,
+	isValidUserUpdateObj,
 } from '../../utils/users';
 
 const getUserByEmail = async (emailParam) => {
@@ -87,4 +90,35 @@ export const createUser = async (userObjParam) => {
 		password: userObj.password,
 	});
 	return createdUser;
+};
+
+export const updateUserDetails = async (
+	userId,
+	updateUserObjParam,
+	currUserParam
+) => {
+	const id = isValidObjectId(userId);
+	const validatedUser = isValidUserAuthObj(currUserParam);
+	if (validatedUser._id !== id)
+		throw forbiddenErr('You cannot update details of another user');
+	const updateUserObj = isValidUserUpdateObj(updateUserObjParam);
+	if (Object.keys(updateUserObj).length === 0)
+		throw badRequestErr('No valid keys for updating provided');
+	const usersCollection = await users();
+	const user = await getUserById(id);
+	const updatedUser = {
+		...user,
+		...updateUserObj,
+	};
+	delete updatedUser._id;
+	const updateUserAck = await usersCollection.updateOne(
+		{
+			_id: new ObjectId(id),
+		},
+		{ $set: updatedUser }
+	);
+	if (!updateUserAck.acknowledged || !updateUserAck.modifiedCount)
+		throw internalServerErr('Could not update details. Please try again.');
+	const postUpdateUser = await getUserById(id);
+	return postUpdateUser;
 };

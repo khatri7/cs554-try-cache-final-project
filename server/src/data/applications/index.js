@@ -156,7 +156,7 @@ export const rejectapplication = async (ApplicationId, user) => {
 	);
 	if (!applicationAck.acknowledged || !applicationAck.modifiedCount)
 		throw internalServerErr(
-			'Could not bookmark the Application. Please try again.'
+			'Could not update the Application. Please try again.'
 		);
 	const applicationUpdate = await getApplicationById(
 		ApplicationId,
