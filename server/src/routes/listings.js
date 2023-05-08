@@ -19,6 +19,7 @@ import {
 	getAllListings,
 	uploadImageListingImage,
 	deleteUploadImageListingImage,
+	getListingById,
 } from '../data/listings';
 import {
 	isValidCreateListingObj,
@@ -68,6 +69,16 @@ router
 
 router
 	.route('/:id')
+	.get(
+		authenticateToken,
+		reqHandlerWrapper(async (req, res) => {
+			const { user } = req;
+			const listingId = req.params.id;
+			isValidUserAuthObj(user);
+			const listing = await getListingById(listingId);
+			res.status(successStatusCodes.OK).json({ listing });
+		})
+	)
 	.patch(
 		authenticateToken,
 		reqHandlerWrapper(async (req, res) => {

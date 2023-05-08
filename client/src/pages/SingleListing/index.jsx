@@ -1,10 +1,13 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import {
 	Box,
 	Button,
 	FormControl,
 	FormControlLabel,
 	FormLabel,
+	Grid,
 	Modal,
+	Paper,
 	Radio,
 	RadioGroup,
 	TextField,
@@ -13,14 +16,16 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { errorAlert } from 'store/alert';
-import { DELETE, PATCH, handleError } from 'utils/api-calls';
+import { DELETE, GET, PATCH, handleError } from 'utils/api-calls';
 import { isValidNum, isValidStr } from 'utils/helpers';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import toast, { Toaster } from 'react-hot-toast';
+// import 'slick-carousel/slick/slick.css';
+// import 'slick-carousel/slick/slick-theme.css';
+import Carousel from 'react-material-ui-carousel';
 
 const style = {
 	position: 'absolute',
@@ -34,12 +39,104 @@ const style = {
 	p: 4,
 };
 
+export const listingToBeShown = (listing) => {
+	const {
+		bedrooms,
+		bathrooms,
+		deposit,
+		description,
+		location,
+		occupied,
+		rent,
+		photos,
+		parking,
+		laundry,
+		petPolicy,
+		squareFoot,
+	} = listing.listing;
+	return (
+		<Paper>
+			<Grid container spacing={2}>
+				<Grid item xs={12} sm={6}>
+					<Carousel>
+						{photos.length > 0 ? (
+							photos.map((i) =>
+								i != null ? (
+									<img
+										src={i}
+										alt={location.name}
+										style={{ width: '100%', height: 'auto' }}
+									/>
+								) : (
+									<img
+										src="https://www.friendlyfoodqatar.com/mt-content/uploads/2017/04/no-image.jpg"
+										alt={location.name}
+										style={{ width: '100%', height: 'auto' }}
+									/>
+								)
+							)
+						) : (
+							<img
+								src="https://www.friendlyfoodqatar.com/mt-content/uploads/2017/04/no-image.jpg"
+								alt={location.name}
+								style={{ width: '100%', height: 'auto' }}
+							/>
+						)}
+					</Carousel>
+				</Grid>
+				<Grid item xs={12} sm={6}>
+					<Typography variant="h4" gutterBottom>
+						Location:{location.name}
+					</Typography>
+					<Typography variant="subtitle1" gutterBottom>
+						Address:{location.name}
+					</Typography>
+					<Typography variant="h5" gutterBottom>
+						{`Rent:${rent}/mo`}
+					</Typography>
+					<Typography
+						variant="subtitle1"
+						gutterBottom
+					>{`${bedrooms} BR / ${bathrooms} BA`}</Typography>
+					<Typography
+						variant="subtitle1"
+						gutterBottom
+					>{`SquareFoot: ${squareFoot} sq.ft.`}</Typography>
+					<Typography
+						variant="subtitle1"
+						gutterBottom
+					>{`Deposit: $${deposit}`}</Typography>
+					<Typography variant="subtitle1" gutterBottom>{`Occupied: ${
+						occupied ? 'Yes' : 'No'
+					}`}</Typography>
+					<Typography variant="body1" gutterBottom>
+						Description:{description}
+					</Typography>
+					<Typography
+						variant="subtitle1"
+						gutterBottom
+					>{`Parking: ${parking}`}</Typography>
+					<Typography
+						variant="subtitle1"
+						gutterBottom
+					>{`Laundry: ${laundry}`}</Typography>
+					<Typography
+						variant="subtitle1"
+						gutterBottom
+					>{`Pet Policy: ${petPolicy}`}</Typography>
+				</Grid>
+			</Grid>
+		</Paper>
+	);
+};
+
 function SingleListing() {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const [open, setOpen] = useState(false);
 	const [deleteModal, setDeleteModal] = useState(false);
 	const handleOpen = () => setOpen(true);
+	const handleClose = () => setOpen(false);
 	const handleDeleteModalOpen = () => setDeleteModal(true);
 	const { id } = useParams();
 	const [formValues, setFormValues] = useState({
@@ -49,8 +146,16 @@ function SingleListing() {
 		availabilityDate: null,
 		occupied: '',
 	});
-
+	const [currListing, setCurrListing] = useState();
 	const [isDisabled, setIsDisabled] = useState(false);
+
+	useEffect(() => {
+		async function getListing() {
+			const listing = await GET(`/listings/${id}`);
+			setCurrListing(listing);
+		}
+		getListing();
+	}, [id]);
 
 	const handleSubmit = async (event) => {
 		try {
@@ -58,7 +163,7 @@ function SingleListing() {
 			event.preventDefault();
 			const { description, rent, deposit } = formValues;
 			isValidStr(description);
-			isValidNum(rent, 'min', 100);
+			isValidNum(rent, 'min', 50);
 			isValidNum(deposit, 'min', 0);
 			const res = await PATCH(`/listings/${id}`, formValues);
 			if (res && res.listing._id) {
@@ -93,7 +198,8 @@ function SingleListing() {
 		try {
 			setDeleteModal(true);
 			const res = await DELETE(`/listings/${id}`);
-			if (res && res.listing.deleted === true) {
+			const delApplications = await DELETE(`/applications/${id}`);
+			if (res && res.listing.deleted === true && delApplications) {
 				toast.success('Listing Deleted Successfully!');
 				setTimeout(() => {
 					navigate('/');
@@ -108,6 +214,21 @@ function SingleListing() {
 
 	return (
 		<div>
+			<div
+				style={{
+					position: 'absolute',
+					top: '0',
+					bottom: '0',
+					left: '0',
+					right: '0',
+					width: '40%',
+					height: '40%',
+					margin: 'auto',
+					textAlign: 'center',
+				}}
+			>
+				<listingToBeShown />
+			</div>
 			<Toaster />
 			<Button
 				variant="contained"
@@ -144,7 +265,6 @@ function SingleListing() {
 						onChange={handleChange}
 					/>
 					<TextField
-						required
 						type="number"
 						name="rent"
 						label="Rent"
@@ -152,7 +272,6 @@ function SingleListing() {
 						onChange={handleChange}
 					/>
 					<TextField
-						required
 						type="number"
 						name="deposit"
 						label="Deposit"
@@ -195,6 +314,7 @@ function SingleListing() {
 							label="Not Occupied"
 						/>
 					</RadioGroup>
+					<input type="file" name="image" onChange={handleChange} />
 					<Button
 						variant="contained"
 						color="primary"
@@ -203,6 +323,14 @@ function SingleListing() {
 						onClick={handleSubmit}
 					>
 						Submit
+					</Button>
+					<Button
+						variant="contained"
+						color="primary"
+						type="submit"
+						onClick={handleClose}
+					>
+						Close
 					</Button>
 				</Box>
 			</Modal>
@@ -222,6 +350,7 @@ function SingleListing() {
 					</Button>
 				</Box>
 			</Modal>
+			<Box>{currListing && listingToBeShown(currListing)}</Box>
 		</div>
 	);
 }
