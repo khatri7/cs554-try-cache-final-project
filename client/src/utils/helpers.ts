@@ -109,7 +109,7 @@ export const isValidDob = (dateParam: string) => {
 	const momentDate = moment(dateParam);
 	if (!momentDate.isValid()) return false;
 	const difference = moment().diff(momentDate, 'year');
-	if (difference < 16 || difference > 100) return false;
+	if (difference < 18 || difference > 100) return false;
 	return true;
 };
 

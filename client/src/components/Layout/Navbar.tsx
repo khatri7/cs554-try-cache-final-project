@@ -146,32 +146,44 @@ const Navbar = () => {
 										open={Boolean(anchorElUser)}
 										onClose={handleCloseUserMenu}
 									>
+										{user.role === 'lessor' && (
+											<MenuItem
+												onClick={async () => {
+													handleCloseUserMenu();
+													navigate('/dashboard');
+												}}
+											>
+												<Typography textAlign="center">
+													View Dashboard
+												</Typography>
+											</MenuItem>
+										)}
+										{user.role === 'tenant' && (
+											<MenuItem
+												onClick={async () => {
+													handleCloseUserMenu();
+													navigate('/my-applications');
+												}}
+											>
+												<Typography textAlign="center">
+													My Applications
+												</Typography>
+											</MenuItem>
+										)}
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
-												navigate('/my-applications');
+												navigate('/my-profile');
 											}}
 										>
-											<Typography textAlign="center">
-												My Applications
-											</Typography>
+											<Typography textAlign="center">My Profile</Typography>
 										</MenuItem>
-
-										<MenuItem
-											onClick={async () => {
-												handleCloseUserMenu();
-												navigate('/dashboard');
-											}}
-										>
-											<Typography textAlign="center">View Dashboard</Typography>
-										</MenuItem>
-
 										<MenuItem
 											onClick={async () => {
 												handleCloseUserMenu();
 												try {
-													await logout();
 													navigate('/');
+													await logout();
 													dispatch(unsetUser());
 												} catch (e) {
 													let error = 'Unexpected error occurred';
