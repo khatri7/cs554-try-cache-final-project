@@ -37,7 +37,55 @@ const read = async (key) => {
 	}
 };
 
+const updatePopularLocalities = async (placeId) => {
+	try {
+		if (isReady) {
+			await client.zIncrBy(
+				'tc_popular_localities',
+				1,
+				`tc_locality_${placeId}`
+			);
+		}
+	} catch {
+		/* empty */
+	}
+};
+
+const getTopTenPopularLocalities = async () => {
+	try {
+		if (!isReady) return [];
+		const localities = await client.zRange('tc_popular_localities', 0, 9, {
+			REV: true,
+		});
+		return localities;
+	} catch {
+		return [];
+	}
+};
+
+const getKeys = async (pattern) => {
+	try {
+		if (!isReady) return [];
+		const keys = await client.keys(pattern);
+		return keys;
+	} catch {
+		return [];
+	}
+};
+
+const delCache = async (key) => {
+	try {
+		if (isReady) await client.del(key);
+	} catch {
+		/* empty */
+	}
+};
+
 export default {
 	cache,
 	read,
+	updatePopularLocalities,
+	getTopTenPopularLocalities,
+	getKeys,
+	delCache,
 };

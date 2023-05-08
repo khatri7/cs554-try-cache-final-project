@@ -17,11 +17,14 @@ import {
 import { isValidUserAuthObj } from '../../utils/users';
 import redis from '../../configs/redis';
 import { deleteObject, upload } from '../../configs/awsS3';
+import { getLocationDetails } from '../../configs/placesApi';
 // One day in seconds
 const ONE_DAY = 86400;
 
 export const getListingById = async (idParam) => {
 	const id = isValidObjectId(idParam);
+	const listingFromCache = await redis.read(`tc_listing_${id}`);
+	if (listingFromCache) return listingFromCache;
 	const listingsCollection = await listings();
 	const listing = await listingsCollection.findOne({ _id: new ObjectId(id) });
 	if (!listing) throw notFoundErr('No listing found for the provided id');
@@ -39,6 +42,64 @@ const checkListingExists = async (location, apt) => {
 		throw badRequestErr('A listing for this location already exists');
 	if (listing && listing.apt === apt)
 		throw badRequestErr('A listing for this location already exists');
+};
+
+const updateLocalityCache = async (listing, remove = false) => {
+	const localityKeys = await redis.getKeys('tc_locality_*');
+	if (remove) {
+		const localityToUpdate = await localityKeys.find(async (locality) => {
+			const localityData = await redis.read(locality);
+			return localityData?.listings?.includes(listing._id.toString());
+		});
+		if (localityToUpdate) {
+			const localityData = await redis.read(localityToUpdate);
+			const updatedListings = localityData?.listings?.filter(
+				(cLisitng) => cLisitng !== listing._id.toString()
+			);
+			await redis.cache(
+				localityData,
+				{
+					...localityData,
+					listings: updatedListings,
+				},
+				{ EX: ONE_DAY },
+				true
+			);
+		}
+	} else {
+		const listingAddressComponents = listing?.location?.addressComponents;
+		if (listingAddressComponents) {
+			const localityToUpdate = await localityKeys.find(async (locality) => {
+				const localityData = await redis.read(locality);
+				if (
+					!localityData ||
+					!locality.addressComponents ||
+					!Array.isArray(locality.addressComponents)
+				)
+					return false;
+				return locality.addressComponents.every((component) =>
+					listingAddressComponents.some(
+						(lComponent) =>
+							JSON.stringify(component) === JSON.stringify(lComponent)
+					)
+				);
+			});
+			if (localityToUpdate) {
+				const localityData = await redis.read(localityToUpdate);
+				if (localityData?.listings?.indexOf(listing._id.toString()) === -1) {
+					await redis.cache(
+						localityToUpdate,
+						{
+							...localityData,
+							listings: [...localityData.listings, listing._id.toString()],
+						},
+						{ EX: ONE_DAY },
+						true
+					);
+				}
+			}
+		}
+	}
 };
 
 export const createListing = async (listingObjParam, user) => {
@@ -90,13 +151,64 @@ export const createListing = async (listingObjParam, user) => {
 	const createdListing = await getListingById(
 		createListingAck.insertedId.toString()
 	);
+	await redis.cache(
+		`tc_listing_${createdListing._id.toString()}`,
+		createdListing,
+		{},
+		true
+	);
+	await updateLocalityCache(createdListing);
 	return createdListing;
+};
+
+const getListingsFromCache = async (placeId) => {
+	const listingsFromCache = await redis.read(`tc_locality_${placeId}`);
+	if (!listingsFromCache) return null;
+	const listingIds = listingsFromCache.listings;
+	return Promise.all(
+		listingIds.map(async (listingId) => {
+			const listing = await redis.read(`tc_listing_${listingId}`);
+			if (!listing) {
+				const listingFromDb = await getListingById(listingId);
+				await redis.cache(`tc_listing_${listingId}`);
+				return listingFromDb;
+			}
+			return listing;
+		})
+	);
+};
+
+const cacheListings = async (searchArea, listingsArr) => {
+	await redis.cache(
+		`tc_locality_${searchArea.placeId}`,
+		{
+			...searchArea,
+			listings: listingsArr.map((listing) => listing._id),
+		},
+		{ EX: ONE_DAY },
+		true
+	);
+	await Promise.all(
+		listingsArr.map(async (listing) => {
+			await redis.cache(
+				`tc_listing_${listing._id.toString()}`,
+				listing,
+				{},
+				true
+			);
+		})
+	);
 };
 
 export const getListings = async (searchAreaParam) => {
 	const searchArea = isValidSearchAreaQuery(searchAreaParam);
-	const listingsFromCache = await redis.read(searchArea.placeId);
-	if (listingsFromCache) return listingsFromCache.listings;
+	const placeDetails = await getLocationDetails(searchArea.placeId);
+	if (placeDetails.status !== 'OK') throw badRequestErr('Invalid Locality');
+	if (placeDetails?.result?.address_components)
+		searchArea.addressComponents = placeDetails.result.address_components;
+	await redis.updatePopularLocalities(searchArea.placeId);
+	const cachedListings = await getListingsFromCache(searchArea.placeId);
+	if (cachedListings !== null) return cachedListings;
 	const listingsCollection = await listings();
 	const listingsArr = await listingsCollection
 		.find({
@@ -110,15 +222,7 @@ export const getListings = async (searchAreaParam) => {
 			},
 		})
 		.toArray();
-	await redis.cache(
-		searchArea.placeId,
-		{
-			...searchArea,
-			listings: listingsArr,
-		},
-		{ EX: ONE_DAY },
-		true
-	);
+	await cacheListings(searchArea, listingsArr);
 	return listingsArr;
 };
 
@@ -155,7 +259,12 @@ export const updateListing = async (listingIdParam, user, listingObjParam) => {
 
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
-
+	await redis.cache(
+		`tc_listing_${updateListingAck.value._id.toString()}`,
+		updateListingAck.value,
+		{},
+		true
+	);
 	return updateListingAck.value;
 };
 
@@ -196,6 +305,12 @@ export const uploadImageListingImage = async (
 	);
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
+	await redis.cache(
+		`tc_listing_${updateListingAck.value._id.toString()}`,
+		updateListingAck.value,
+		{},
+		true
+	);
 	return updateListingAck.value;
 };
 
@@ -232,6 +347,12 @@ export const deleteUploadImageListingImage = async (
 	);
 	if (updateListingAck.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
+	await redis.cache(
+		`tc_listing_${updateListingAck.value._id.toString()}`,
+		updateListingAck.value,
+		{},
+		true
+	);
 	return updateListingAck.value;
 };
 
@@ -251,7 +372,8 @@ export const deleteListing = async (id, user) => {
 	});
 	if (deletionInfo.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
-
+	await redis.delCache(`tc_listing_${oldListing._id.toString()}`);
+	await updateLocalityCache(oldListing, true);
 	return { listingId: listingIdParam, deleted: true };
 };
 

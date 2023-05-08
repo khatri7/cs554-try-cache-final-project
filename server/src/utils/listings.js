@@ -26,7 +26,6 @@ export const isValidCreateListingObj = (listingObj) => {
 	if (!isValidObj(listingObj)) throw badRequestErr('Expected a listing object');
 	if (!isValidObj(listingObj.location)) throw badRequestErr('Invalid location');
 	return {
-
 		apt:
 			listingObj.apt !== undefined &&
 			listingObj.apt !== '' &&
@@ -57,7 +56,6 @@ export const isValidCreateListingObj = (listingObj) => {
 			listingObj.squareFoot !== null
 				? isValidNum(listingObj.squareFoot, 'SquareFoot', 'min', 100)
 				: null,
-
 	};
 };
 
@@ -90,6 +88,7 @@ export const isValidSearchAreaQuery = ({
 		throw badRequestErr('Invalid Search area coordinates');
 	return searchArea;
 };
+
 export const isValidUpdateListingObj = (listingObj) => {
 	if (!isValidObj(listingObj)) throw badRequestErr('Expected a listing object');
 	return {
