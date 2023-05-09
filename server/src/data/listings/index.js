@@ -33,11 +33,19 @@ export const getListingById = async (idParam) => {
 	if (listingFromCache) {
 		listingFromCache._id = new ObjectId(listingFromCache._id);
 		listingFromCache.listedBy = new ObjectId(listingFromCache.listedBy);
+		listingFromCache.photos = listingFromCache.photos.map((photo) => {
+			if (photo) return `${photo}?t=${Date.now()}`;
+			return photo;
+		});
 		return listingFromCache;
 	}
 	const listingsCollection = await listings();
 	const listing = await listingsCollection.findOne({ _id: new ObjectId(id) });
 	if (!listing) throw notFoundErr('No listing found for the provided id');
+	listing.photos = listing.photos.map((photo) => {
+		if (photo) return `${photo}?t=${Date.now()}`;
+		return photo;
+	});
 	return listing;
 };
 
@@ -341,7 +349,7 @@ export const uploadImageListingImage = async (
 		{},
 		true
 	);
-	return updateListingAck.value;
+	return getListingById(id);
 };
 
 export const deleteUploadImageListingImage = async (
@@ -383,7 +391,7 @@ export const deleteUploadImageListingImage = async (
 		{},
 		true
 	);
-	return updateListingAck.value;
+	return getListingById(id);
 };
 
 const deleteAssociatedApplications = async (listingId) => {
