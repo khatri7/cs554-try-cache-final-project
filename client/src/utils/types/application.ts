@@ -6,7 +6,7 @@ export interface Application {
 	terms: string | null;
 	createdAt: Date;
 	updatedAt: number;
-	status: string;
+	status: 'REVIEW' | 'DECLINED' | 'APPROVED' | 'PAYMENT_PENDING' | 'COMPLETED';
 	tenant: User;
 	notes: Notes;
 	paymentSessionId: string;

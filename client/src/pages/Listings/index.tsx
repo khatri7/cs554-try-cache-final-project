@@ -11,26 +11,29 @@ import {
 	FormControlLabel,
 	Checkbox,
 } from '@mui/material';
+import { Suggestion } from 'use-places-autocomplete';
 import PlacesAutocomplete from 'components/PlacesAutocomplete';
 import { getSelectedAreaCoordinates, isValidNum } from 'utils/helpers';
 import { getListings, handleError } from 'utils/api-calls';
 import ListingCard from 'components/ListingCard';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { errorAlert } from 'store/alert';
 import { useDispatch } from 'react-redux';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
+import { Listing } from 'utils/types/listing';
 
 function Listings() {
 	const location = useLocation();
 	const dispatch = useDispatch();
-	const navigate = useNavigate();
+
 	const locationFromHome = location?.state?.location;
 
 	const [loading, setLoading] = useState(false);
-	const [areaSelected, setAreaSelected] = useState(null);
+	const [areaSelected, setAreaSelected] = useState<Suggestion | null>(null);
 	const [listings, setListings] = useState([]);
-	const [filteredListings, setFilteredListings] = useState([]);
+	const [filteredListings, setFilteredListings] = useState<Listing[] | null>(
+		[]
+	);
 	const [filtersApplied, setFiltersApplied] = useState(false);
 	const [filterValues, setFilterValues] = useState({
 		bedrooms: '',
@@ -42,9 +45,11 @@ function Listings() {
 		parking: false,
 	});
 	const [isDisabled, setIsDisabled] = useState(false);
-	const [filterEl, setFilterEl] = React.useState(null);
+	const [filterEl, setFilterEl] = React.useState<HTMLButtonElement | null>(
+		null
+	);
 
-	const handleOpenFilters = (event) => {
+	const handleOpenFilters = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setFilterEl(event.currentTarget);
 	};
 
@@ -55,10 +60,11 @@ function Listings() {
 	const open = Boolean(filterEl);
 	const id = open ? 'filter-popover' : undefined;
 
-	const handleChange = (event) => {
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setIsDisabled(false);
 		const { name } = event.target;
-		let { value, type } = event.target;
+		let { value }: any = event.target;
+		let { type } = event.target;
 		if (value === '') type = 'change';
 		if (type === 'checkbox') {
 			value = event.target.checked;
@@ -69,7 +75,7 @@ function Listings() {
 		});
 	};
 
-	const handleApplyFilter = async (event) => {
+	const handleApplyFilter = async (event: React.SyntheticEvent) => {
 		try {
 			setFiltersApplied(true);
 			setIsDisabled(true);
@@ -78,24 +84,29 @@ function Listings() {
 			if (!areaSelected) throw new Error('Please Select a Location first');
 			if (
 				bedrooms !== '' &&
-				(!isValidNum(bedrooms, 'min', 0) || !isValidNum(bedrooms, 'max', 20))
+				(!isValidNum(Number(bedrooms), 'min', 0) ||
+					!isValidNum(Number(bedrooms), 'max', 20))
 			)
 				throw new Error('Invalid Bedrooms, should be between 0-20');
-			if (rent !== '' && !isValidNum(rent, 'min', 100))
+			if (rent !== '' && !isValidNum(Number(rent), 'min', 100))
 				throw new Error('Invalid Rent, should at least 100');
-			if (squareFoot !== '' && !isValidNum(squareFoot, 'min', 100))
+			if (squareFoot !== '' && !isValidNum(Number(squareFoot), 'min', 100))
 				throw new Error('Invalid area, should be at least 100 sq.ft');
-			const filteredResults = [];
-			listings.forEach((data) => {
+			const filteredResults: Listing[] = [];
+			listings.forEach((data: Listing) => {
 				let flag = true;
-				if (filterValues.bedrooms && data.bedrooms !== filterValues.bedrooms)
+				if (
+					filterValues.bedrooms &&
+					data.bedrooms !== Number(filterValues.bedrooms)
+				)
 					flag = false;
 				if (
 					filterValues.squareFoot &&
-					data.squareFoot < filterValues.squareFoot
+					data.squareFoot < Number(filterValues.squareFoot)
 				)
 					flag = false;
-				if (filterValues.rent && data.rent > filterValues.rent) flag = false;
+				if (filterValues.rent && data.rent > Number(filterValues.rent))
+					flag = false;
 				if (filterValues.petPolicy && data.petPolicy !== 'allowed')
 					flag = false;
 				if (filterValues.sharedLaundry && data.laundry !== 'shared')
@@ -115,7 +126,7 @@ function Listings() {
 		}
 	};
 
-	const handleSearch = async (selectedLocation) => {
+	const handleSearch = async (selectedLocation: Suggestion) => {
 		try {
 			setFiltersApplied(false);
 			setFilteredListings(null);
@@ -310,73 +321,20 @@ function Listings() {
 					Currently there are no listings in the selected area
 				</Typography>
 			)}
-			{filtersApplied && filteredListings.length === 0 && (
+			{filtersApplied && filteredListings?.length === 0 && (
 				<Typography>
 					Currently there are no listings that match the filters applied
 				</Typography>
 			)}
 			<Stack gap={4}>
-				{filtersApplied && (
-					<>
-						{filteredListings.length > 0 && (
-							<Box>
-								<GoogleMap
-									mapContainerStyle={{ height: '240px' }}
-									zoom={11}
-									center={{
-										lat: listings[0].location.lat,
-										lng: listings[0].location.lng,
-									}}
-								>
-									{filteredListings.map((listing) => (
-										<Marker
-											key={listing._id}
-											position={{
-												lat: listing.location.lat,
-												lng: listing.location.lng,
-											}}
-										/>
-									))}
-								</GoogleMap>
-							</Box>
-						)}
-						{filteredListings.map((listing) => (
-							<ListingCard key={listing._id} listing={listing} />
-						))}
-					</>
-				)}
-				{!filtersApplied && (
-					<>
-						{listings.length > 0 && (
-							<Box>
-								<GoogleMap
-									mapContainerStyle={{ height: '240px' }}
-									zoom={11}
-									center={{
-										lat: listings[0].location.lat,
-										lng: listings[0].location.lng,
-									}}
-								>
-									{listings.map((listing) => (
-										<Marker
-											onClick={() => {
-												navigate(`/listings/${listing._id}`);
-											}}
-											key={listing._id}
-											position={{
-												lat: listing.location.lat,
-												lng: listing.location.lng,
-											}}
-										/>
-									))}
-								</GoogleMap>
-							</Box>
-						)}
-						{listings.map((listing) => (
-							<ListingCard key={listing._id} listing={listing} />
-						))}
-					</>
-				)}
+				{filtersApplied &&
+					filteredListings?.map((listing) => (
+						<ListingCard key={listing._id} listing={listing} />
+					))}
+				{!filtersApplied &&
+					listings.map((listing: Listing) => (
+						<ListingCard key={listing._id} listing={listing} />
+					))}
 			</Stack>
 		</Box>
 	);

@@ -1,7 +1,6 @@
 import {
 	Box,
 	Button,
-	Chip,
 	FormControl,
 	FormControlLabel,
 	FormLabel,
@@ -33,7 +32,7 @@ import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import PetsIcon from '@mui/icons-material/Pets';
 import { Delete, Edit } from '@mui/icons-material';
-import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
+import { Listing } from 'utils/types/listing';
 
 const style = {
 	position: 'absolute',
@@ -47,7 +46,7 @@ const style = {
 	p: 4,
 };
 
-function ListingToBeShown({ listing }) {
+const ListingToBeShown: React.FC<{ listing: Listing }> = ({ listing }) => {
 	const {
 		apt,
 		bedrooms,
@@ -55,14 +54,14 @@ function ListingToBeShown({ listing }) {
 		deposit,
 		description,
 		location,
-		occupied,
+		// occupied,
 		rent,
 		photos,
 		parking,
 		petPolicy,
 		squareFoot,
 	} = listing;
-	const listingPhotos = photos.filter((photo) => photo !== null);
+	const listingPhotos = photos.filter((photo) => photo !== null) as string[];
 	const laundry = useMemo(() => {
 		if (listing.laundry === 'inunit') return 'In-Unit';
 		if (listing.laundry === 'shared') return 'Shared';
@@ -86,7 +85,7 @@ function ListingToBeShown({ listing }) {
 							<img
 								src={NoImage}
 								alt={location.name}
-								style={{ width: '100%', objectFit: 'contain' }}
+								style={{ width: '100%', height: 'auto' }}
 							/>
 						)}
 					</Carousel>
@@ -133,7 +132,6 @@ function ListingToBeShown({ listing }) {
 							{petPolicy === 'allowed' ? 'Allowed' : 'Not Allowed'}
 						</Typography>
 					</Stack>
-					{occupied && <Chip sx={{ mt: 4 }} label="OFF MARKET" />}
 				</Grid>
 			</Grid>
 			<Typography
@@ -148,25 +146,16 @@ function ListingToBeShown({ listing }) {
 			<Typography fontSize="1.1rem">
 				{description.trim() ? description.trim() : 'No Description'}
 			</Typography>
-			<Box sx={{ mt: 4 }}>
-				<GoogleMap
-					mapContainerStyle={{ height: '200px' }}
-					zoom={12}
-					center={{
-						lat: location.lat,
-						lng: location.lng,
-					}}
-				>
-					<Marker
-						position={{
-							lat: location.lat,
-							lng: location.lng,
-						}}
-					/>
-				</GoogleMap>
-			</Box>
 		</Box>
 	);
+};
+
+interface FormInterface {
+	description: string;
+	rent: string;
+	deposit: string;
+	availabilityDate: string | null;
+	occupied: string | boolean;
 }
 
 function SingleListing() {
@@ -178,14 +167,17 @@ function SingleListing() {
 	const handleClose = () => setOpen(false);
 	const handleDeleteModalOpen = () => setDeleteModal(true);
 	const { id } = useParams();
-	const [formValues, setFormValues] = useState({
+	const [formValues, setFormValues] = useState<FormInterface>({
 		description: '',
 		rent: '',
 		deposit: '',
 		availabilityDate: null,
 		occupied: '',
 	});
-	const [currListing, setCurrListing] = useState();
+	interface CurrListingInterface {
+		listing: Listing;
+	}
+	const [currListing, setCurrListing] = useState<CurrListingInterface>();
 	const [isDisabled, setIsDisabled] = useState(false);
 	const user = useAppSelector((state) => state.user.value);
 
@@ -197,15 +189,15 @@ function SingleListing() {
 		getListing();
 	}, [id]);
 
-	const handleSubmit = async (event) => {
+	const handleSubmit = async (event: React.SyntheticEvent) => {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
 			const { description, rent, deposit } = formValues;
 			if (
 				!isValidStr(description) &&
-				!isValidNum(rent, 'min', 50) &&
-				!isValidNum(deposit, 'min', 0)
+				!isValidNum(Number(rent), 'min', 50) &&
+				!isValidNum(Number(deposit), 'min', 0)
 			) {
 				return;
 			}
@@ -222,7 +214,7 @@ function SingleListing() {
 		}
 	};
 
-	const handleChange = (event) => {
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = event.target;
 		let { type } = event.target;
 		setIsDisabled(false);
@@ -314,10 +306,14 @@ function SingleListing() {
 						<LocalizationProvider dateAdapter={AdapterMoment}>
 							<DatePicker
 								label="Availability Date"
-								value={formValues.availabilityDate}
+								value={
+									formValues.availabilityDate
+										? moment(formValues.availabilityDate)
+										: null
+								}
 								format="MM-DD-YYYY"
 								minDate={moment()}
-								onChange={(newValue) => {
+								onChange={(newValue: moment.Moment | null) => {
 									setFormValues({
 										...formValues,
 										availabilityDate: newValue
@@ -383,11 +379,9 @@ function SingleListing() {
 				</Box>
 			</Modal>
 			<Box>
-				{currListing && currListing.listing && (
-					<ListingToBeShown listing={currListing.listing} />
-				)}
+				{currListing && <ListingToBeShown listing={currListing.listing} />}
 			</Box>
-			{user?.role === 'tenant' && currListing?.listing?.occupied === false && (
+			{user?.role === 'tenant' && (
 				<Button
 					variant="contained"
 					sx={{ mt: 4 }}

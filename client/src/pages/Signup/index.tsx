@@ -20,6 +20,7 @@ import { errorAlert, successAlert } from 'store/alert';
 import { setUser } from 'store/user';
 import { createUser, handleError } from 'utils/api-calls';
 import { isValidDateStr, isValidDob } from 'utils/helpers';
+import { UserCreate } from 'utils/types';
 import * as Yup from 'yup';
 
 const schema = Yup.object().shape({
@@ -33,8 +34,8 @@ const schema = Yup.object().shape({
 		.matches(/^[a-zA-Z]*$/, 'Invalid Last name')
 		.min(3, 'Last name must be at least 3 characters')
 		.max(40, 'Last name cannot be greater than 40 characters'),
-	dob: Yup.string('Invalid DOB').required('DOB is required'),
-	phone: Yup.string('Invalid Phone Number')
+	dob: Yup.string().required('DOB is required'),
+	phone: Yup.string()
 		.required('Phone Number is required')
 		.matches(/^\(\d{3}\)\s\d{3}-\d{4}$/, 'Invalid Phone Number'),
 	email: Yup.string()
@@ -47,7 +48,7 @@ const schema = Yup.object().shape({
 	password: Yup.string()
 		.required('Password is required')
 		.min(8, 'Password must be at least 8 characters'),
-	role: Yup.string('Invalid Role')
+	role: Yup.string()
 		.required('Role is required')
 		.oneOf(['tenant', 'lessor'], 'Invalid role'),
 });
@@ -59,9 +60,10 @@ function Signup() {
 	const handleClickShowPassword = () => {
 		setShowPassword(!showPassword);
 	};
-	const handleMouseDownPassword = (event) => {
+	const handleMouseDownPassword = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 	};
+
 	return (
 		<Box>
 			<Box
@@ -86,7 +88,7 @@ function Signup() {
 					}}
 					validationSchema={schema}
 					validate={(values) => {
-						const errors = {};
+						const errors: { [key: string]: string } = {};
 						if (values.dob) {
 							if (!isValidDateStr(values.dob)) errors.dob = 'Invalid DOB';
 							else if (!isValidDob(values.dob))
@@ -98,7 +100,7 @@ function Signup() {
 					onSubmit={async (values, { setSubmitting }) => {
 						try {
 							setSubmitting(true);
-							const userObj = {
+							const userObj: UserCreate = {
 								...values,
 								phone: values.phone.replace(/\D/g, ''),
 							};

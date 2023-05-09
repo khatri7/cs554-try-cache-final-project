@@ -6,3 +6,13 @@ export interface User {
 	phone: string;
 	role: 'tenant' | 'lessor';
 }
+
+export interface UserCreate {
+	phone: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+	dob: null;
+	role: string;
+}

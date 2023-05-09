@@ -1,4 +1,5 @@
 import Axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
+import { UserCreate } from 'utils/types';
 
 const axios: AxiosInstance = Axios.create({
 	baseURL: process.env.REACT_APP_SERVER_URL,
@@ -79,8 +80,7 @@ export const getListings = (params: { [key: string]: string }) =>
 export const login = (userLoginObj: { email: string; password: string }) =>
 	POST('/auth/login', userLoginObj);
 
-export const createUser = (user: { [key: string]: string }) =>
-	POST('/auth/signup', user);
+export const createUser = (user: UserCreate) => POST('/auth/signup', user);
 
 export const initialReq = () => POST('/auth');
 
@@ -99,7 +99,7 @@ export const createApplication = (applicationBody: { [key: string]: any }) => {
 	);
 };
 
-export const declineApplication = (applicationId: string) =>
+export const declineApplication = (applicationId: string | undefined) =>
 	POST(`/applications/${applicationId}/lessor/reject`);
 
 export const approveApplication = (

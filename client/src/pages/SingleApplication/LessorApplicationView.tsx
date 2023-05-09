@@ -15,21 +15,35 @@ import { useDispatch } from 'react-redux';
 import { errorAlert, successAlert } from 'store/alert';
 import { approveApplication, handleError } from 'utils/api-calls';
 import { prettifyPhoneString } from 'utils/helpers';
+import { Application } from 'utils/types/application';
 
 const FIVE_MB = 1024 * 1024 * 5;
+
+interface ViewInterface {
+	application: Application;
+	handleDecline: () => void;
+	disableDeclineBtn: boolean | undefined;
+	onSuccessApprove: Function;
+}
 
 function LessorApplicationView({
 	application,
 	handleDecline,
 	disableDeclineBtn,
 	onSuccessApprove,
-}) {
+}: ViewInterface) {
 	const [showApproveForm, setShowApproveForm] = useState(false);
-	const fileUploadRef = useRef();
+	const fileUploadRef = useRef<HTMLInputElement | null>(null);
 
 	const dispatch = useDispatch();
 
-	const handleFileUpload = (e, onSuccess) => {
+	const handleFileUpload = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		onSuccess: Function
+	) => {
+		if (!e.target.files) {
+			return;
+		}
 		const document = e.target.files[0];
 		if (document) {
 			if (document.type !== 'application/pdf') {
@@ -43,6 +57,11 @@ function LessorApplicationView({
 			}
 		}
 	};
+
+	interface Values {
+		text: string;
+		lease: { [key: string]: string };
+	}
 
 	return (
 		<Box>
@@ -99,8 +118,8 @@ function LessorApplicationView({
 							color="error"
 							variant="outlined"
 							size="large"
-							onClick={handleDecline}
 							disabled={disableDeclineBtn}
+							onClick={handleDecline}
 						>
 							Decline
 						</Button>
@@ -120,11 +139,12 @@ function LessorApplicationView({
 					<Formik
 						initialValues={{
 							text: '',
-							terms: null,
+							lease: { name: '' },
 						}}
-						onSubmit={async (values, { setSubmitting }) => {
+						onSubmit={async (values: Values, { setSubmitting }) => {
 							try {
 								setSubmitting(true);
+								if (!values.lease) throw new Error('Lease is required');
 								const response = await approveApplication(
 									application._id,
 									values
@@ -170,14 +190,15 @@ function LessorApplicationView({
 													fileUploadRef.current.click();
 											}}
 										>
-											Upload Terms and Conditions
+											Upload Lease
 										</Button>
 										<Typography fontStyle="italic">
-											{values.terms
-												? `Selected File: ${values.terms.name}`
+											{values.lease
+												? `Selected File: ${values.lease.name}`
 												: 'No File Selected'}
 										</Typography>
 									</Stack>
+									<FormHelperText sx={{ mt: -2 }}>* required</FormHelperText>
 									<input
 										ref={fileUploadRef}
 										type="file"
@@ -185,8 +206,8 @@ function LessorApplicationView({
 										hidden
 										accept="application/pdf"
 										onChange={(e) => {
-											handleFileUpload(e, (value) => {
-												setFieldValue('terms', value);
+											handleFileUpload(e, (value: File) => {
+												setFieldValue('lease', value);
 											});
 										}}
 									/>
@@ -206,7 +227,7 @@ function LessorApplicationView({
 										<Button
 											variant="contained"
 											type="submit"
-											disabled={isSubmitting}
+											disabled={isSubmitting || !values.lease}
 										>
 											Approve Application
 										</Button>
@@ -235,7 +256,7 @@ function LessorApplicationView({
 							<Typography>No Documents</Typography>
 						) : (
 							<Stack gap={2} alignItems="flex-start">
-								{application.notes.COMPLETED?.documents?.map((doc) => (
+								{application.notes.COMPLETED?.documents?.map((doc: string) => (
 									<Button
 										href={doc}
 										key={doc}
