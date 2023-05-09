@@ -151,3 +151,24 @@ export const updateUser = (
 		[key: string]: string;
 	}
 ) => PATCH(`/users/${userId}`, updateUserObj);
+
+export const uploadListingImage = (
+	listingId: string,
+	body: { [key: string]: any }
+) => {
+	const formData = new FormData();
+	Object.entries(body).forEach((item) => {
+		formData.append(item[0], item[1]);
+	});
+	return POST(
+		`/listings/${listingId}/image`,
+		formData,
+		{},
+		{ 'Content-Type': 'multipart/form-data' }
+	);
+};
+
+export const deleteListingImage = (listingId: string, position: number) =>
+	DELETE(`/listings/${listingId}/image`, {
+		position,
+	});
