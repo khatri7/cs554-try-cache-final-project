@@ -10,6 +10,7 @@ import {
 	isValidStr,
 } from '../../utils';
 import {
+	isValidAvailabilityDate,
 	isValidCreateListingObj,
 	isValidSearchAreaQuery,
 	isValidUpdateListingObj,
@@ -22,6 +23,7 @@ import {
 	getLocationDetails,
 	getPlacesAutocompleteLocality,
 } from '../../configs/placesApi';
+
 // One day in seconds
 const ONE_DAY = 86400;
 
@@ -260,11 +262,12 @@ export const updateListing = async (listingIdParam, user, listingObjParam) => {
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 	const { description, rent, deposit, availabilityDate, occupied } =
 		isValidUpdateListingObj(listingObjParam);
-
 	const oldListing = await getListingById(id);
 	if (validatedUser._id !== oldListing.listedBy.toString()) {
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 	}
+	if (availabilityDate && availabilityDate !== oldListing.availabilityDate)
+		isValidAvailabilityDate(availabilityDate);
 	const updateListingObj = {
 		apt: oldListing.apt,
 		description: description || oldListing.description,

@@ -9,7 +9,15 @@ function ErrorPage() {
 		navigate('/');
 	};
 	return (
-		<div className="notFound__container" style={{ backgroundColor: '#f0f0f0' }}>
+		<div className="notFound__container">
+			<div
+				style={{
+					position: 'fixed',
+					inset: 0,
+					backgroundColor: '#f0f0f0',
+					zIndex: -1,
+				}}
+			/>
 			<div
 				className="notFound__content"
 				style={{
@@ -22,6 +30,7 @@ function ErrorPage() {
 				<img src={image} alt="404" style={{ width: '50%' }} />
 				<Button
 					type="button"
+					variant="outlined"
 					className="notFound__content__btn"
 					onClick={handleNavigate}
 				>
