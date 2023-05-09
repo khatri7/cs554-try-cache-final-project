@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { listings } from '../../configs/mongodb';
+import { applications, listings } from '../../configs/mongodb';
 import {
 	badRequestErr,
 	forbiddenErr,
@@ -386,6 +386,15 @@ export const deleteUploadImageListingImage = async (
 	return updateListingAck.value;
 };
 
+const deleteAssociatedApplications = async (listingId) => {
+	const id = isValidObjectId(listingId);
+	const applicationCollection = await applications();
+	const updatedAppCol = await applicationCollection.deleteMany({
+		'listing._id': new ObjectId(id),
+	});
+	return updatedAppCol;
+};
+
 export const deleteListing = async (id, user) => {
 	const listingIdParam = isValidObjectId(id);
 	const validatedUser = isValidUserAuthObj(user);
@@ -402,6 +411,7 @@ export const deleteListing = async (id, user) => {
 	});
 	if (deletionInfo.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
+	await deleteAssociatedApplications(listingIdParam);
 	await redis.delCache(`tc_listing_${oldListing._id.toString()}`);
 	await updateLocalityCache(oldListing, true);
 	return { listingId: listingIdParam, deleted: true };
