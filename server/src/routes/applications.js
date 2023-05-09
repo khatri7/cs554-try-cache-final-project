@@ -187,7 +187,6 @@ router.route('/:id/lessor/reject').post(
 				'You cannot update an Application if are logged in as Tenant'
 			);
 		const application = await rejectapplication(id, validatedUser);
-
 		res.status(successStatusCodes.CREATED).json({ application });
 	})
 );
@@ -214,7 +213,6 @@ router.route('/:id/lessor/approve').post(
 			validatedUser,
 			req.file
 		);
-
 		res.status(successStatusCodes.CREATED).json({ application });
 	})
 );

@@ -77,9 +77,11 @@ export const createApplication = async (
 		listedBy,
 		apt,
 		location: { streetAddress },
+		occupied,
 	} = await getListingById(listingId);
 	if (await checkApplicationExists(validatedUser._id, listingId))
 		throw badRequestErr('You already have an application for this listing');
+	if (occupied) throw badRequestErr('Listing is off market');
 	const now = new Date();
 	let document = null;
 	const applicationId = new ObjectId();
@@ -216,7 +218,6 @@ export const approveApplication = async (
 
 	const application = await getApplicationById(applicationId, validatedUser);
 	await checkListingOccupied(application.listing._id.toString());
-
 	if (application.listing.listedBy.toString() !== validatedUser.id) {
 		unauthorizedErr('incorrect User accessing the application');
 	}
@@ -261,14 +262,11 @@ export const completeApplication = async (
 	documents
 ) => {
 	const validatedUser = isValidUserAuthObj(user);
-
 	if (validatedUser.role !== 'tenant')
 		throw forbiddenErr('You cannot update this information as Lessor');
-
 	const applicationCollection = await applications();
-
 	const application = await getApplicationById(applicationId, validatedUser);
-
+	await checkListingOccupied(application.listing._id.toString());
 	if (application.listing.listedBy.toString() !== validatedUser.id) {
 		unauthorizedErr('incorrect User accessing the application');
 	}
