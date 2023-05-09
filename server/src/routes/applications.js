@@ -19,7 +19,6 @@ import {
 	rejectapplication,
 	completeApplication,
 	updatePaymentStatus,
-	deleteApplications,
 } from '../data/applications';
 import {
 	applicationStatus,
@@ -41,32 +40,17 @@ router.route('/my-applications').get(
 	})
 );
 
-router
-	.route('/:id')
-	.get(
-		authenticateToken,
-		reqHandlerWrapper(async (req, res) => {
-			const { user } = req;
-			const validatedUser = isValidUserAuthObj(user);
-			let { id } = req.params;
-			id = isValidObjectId(xss(id));
-			const application = await getApplicationById(id, validatedUser);
-			res.json({ application });
-		})
-	)
-	.delete(
-		authenticateToken,
-		reqHandlerWrapper(async (req, res) => {
-			const { user } = req;
-			const validatedUser = isValidUserAuthObj(user);
-			if (validatedUser.role !== 'lessor')
-				throw forbiddenErr('You cannot delete this if you are not a Lessor.');
-			let { id } = req.params;
-			id = isValidObjectId(xss(id));
-			const updatedApplications = await deleteApplications(id);
-			res.json({ updatedApplications });
-		})
-	);
+router.route('/:id').get(
+	authenticateToken,
+	reqHandlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		let { id } = req.params;
+		id = isValidObjectId(xss(id));
+		const application = await getApplicationById(id, validatedUser);
+		res.json({ application });
+	})
+);
 
 router.route('/:id/payment').post(
 	authenticateToken,

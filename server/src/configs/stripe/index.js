@@ -6,12 +6,12 @@ let stripe;
 const getEnvVariables = () => {
 	return new Promise((resolve) => {
 		if (process.env.STRIPE_SK) {
-			resolve();
+			resolve(true);
 		} else {
 			const checkInterval = setInterval(() => {
 				if (process.env.STRIPE_SK) {
 					clearInterval(checkInterval);
-					resolve();
+					resolve(true);
 				}
 			}, 100);
 		}

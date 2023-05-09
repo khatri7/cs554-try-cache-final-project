@@ -9,12 +9,12 @@ let s3;
 const getEnvVariables = () => {
 	return new Promise((resolve) => {
 		if (process.env.S3_BUCKET_REGION) {
-			resolve();
+			resolve(true);
 		} else {
 			const checkInterval = setInterval(() => {
 				if (process.env.S3_BUCKET_REGION) {
 					clearInterval(checkInterval);
-					resolve();
+					resolve(true);
 				}
 			}, 100);
 		}

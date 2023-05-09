@@ -1,20 +1,29 @@
 import redis from 'redis';
 
+let isReady = false;
+
 /* use this for local redis server */
 // const client = redis.createClient();
+// client.connect().then(() => {
+// 	isReady = true;
+// });
 
-let isReady = false;
+// client.on('error', (err) => {
+// 	console.log('Redis Client Error', err);
+// 	isReady = false;
+// });
+/* end of local redis server config */
 
 /* use this for redis cloud */
 const getEnvVariables = () => {
 	return new Promise((resolve) => {
 		if (process.env.REDIS_CLOUD_HOST) {
-			resolve();
+			resolve(true);
 		} else {
 			const checkInterval = setInterval(() => {
 				if (process.env.REDIS_CLOUD_HOST) {
 					clearInterval(checkInterval);
-					resolve();
+					resolve(true);
 				}
 			}, 100);
 		}
@@ -31,17 +40,15 @@ getEnvVariables().then(() => {
 			port: process.env.REDIS_CLOUD_PORT,
 		},
 	});
+	client.connect().then(() => {
+		isReady = true;
+	});
+	client.on('error', (err) => {
+		console.log('Redis Client Error', err);
+		isReady = false;
+	});
 });
 /* end of redis cloud config */
-
-client?.connect().then(() => {
-	isReady = true;
-});
-
-client?.on('error', (err) => {
-	console.log('Redis Client Error', err);
-	isReady = false;
-});
 
 const cache = async (key, value, options = {}, stringify = false) => {
 	try {

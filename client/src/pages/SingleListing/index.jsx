@@ -297,8 +297,8 @@ function SingleListing() {
 		try {
 			setDeleteModal(true);
 			const res = await DELETE(`/listings/${id}`);
-			const delApplications = await DELETE(`/applications/${id}`);
-			if (res && res.listing.deleted === true && delApplications) {
+			if (!res?.listing?.deleted) throw new Error();
+			if (res && res.listing?.deleted === true) {
 				toast.success('Listing Deleted Successfully!');
 				setTimeout(() => {
 					navigate('/');
