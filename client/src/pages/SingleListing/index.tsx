@@ -16,8 +16,13 @@ import {
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
-import React, { useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, {
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { errorAlert, successAlert, warningAlert } from 'store/alert';
 import { DELETE, GET, PATCH, handleError } from 'utils/api-calls';
@@ -25,7 +30,7 @@ import { isValidNum } from 'utils/helpers';
 import toast, { Toaster } from 'react-hot-toast';
 import Carousel from 'react-material-ui-carousel';
 import NoImage from 'components/ListingCard/no-image.jpeg';
-import { useAppSelector } from 'hooks';
+import { useAppDispatch, useAppSelector } from 'hooks';
 import { formatter } from 'components/ListingCard';
 import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
@@ -33,6 +38,7 @@ import PetsIcon from '@mui/icons-material/Pets';
 import { Delete, Edit } from '@mui/icons-material';
 import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
 import UploadListingMedia from 'components/UploadListingMedia';
+import { Listing } from 'utils/types/listing';
 
 const style = {
 	position: 'absolute',
@@ -46,7 +52,11 @@ const style = {
 	p: 4,
 };
 
-function ListingToBeShown({ listing, isOwner, setCurrListing }) {
+const ListingToBeShown: React.FC<{
+	listing: Listing;
+	isOwner: boolean;
+	setCurrListing: Dispatch<SetStateAction<{ listing: Listing } | null>>;
+}> = ({ listing, isOwner, setCurrListing }) => {
 	const {
 		apt,
 		bedrooms,
@@ -61,7 +71,7 @@ function ListingToBeShown({ listing, isOwner, setCurrListing }) {
 		petPolicy,
 		squareFoot,
 	} = listing;
-	const listingPhotos = photos?.filter((photo) => photo !== null);
+	const listingPhotos = photos?.filter((photo) => photo !== null) as string[];
 	const laundry = useMemo(() => {
 		if (listing.laundry === 'inunit') return 'In-Unit';
 		if (listing.laundry === 'shared') return 'Shared';
@@ -195,21 +205,23 @@ function ListingToBeShown({ listing, isOwner, setCurrListing }) {
 			</Box>
 		</Box>
 	);
-}
+};
 
-function SingleListing() {
+const SingleListing: React.FC<{}> = () => {
 	const navigate = useNavigate();
-	const dispatch = useDispatch();
-	const [open, setOpen] = useState(false);
-	const [deleteModal, setDeleteModal] = useState(false);
+	const dispatch = useAppDispatch();
+	const [open, setOpen] = useState<boolean>(false);
+	const [deleteModal, setDeleteModal] = useState<boolean>(false);
 	const handleOpen = () => setOpen(true);
 	const handleClose = () => setOpen(false);
 	const handleDeleteModalOpen = () => setDeleteModal(true);
 	const { id } = useParams();
-	const [currListing, setCurrListing] = useState();
+	const [currListing, setCurrListing] = useState<null | { listing: Listing }>(
+		null
+	);
 	useEffect(() => {
 		async function getListing() {
-			const listing = await GET(`/listings/${id}`);
+			const listing = await GET<{ listing: Listing }>(`/listings/${id}`);
 			setCurrListing(listing);
 		}
 
@@ -217,7 +229,13 @@ function SingleListing() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	const [formValues, setFormValues] = useState({
+	const [formValues, setFormValues] = useState<{
+		description: string;
+		rent: string | number;
+		deposit: string | number;
+		availabilityDate: string | null;
+		occupied: string | boolean;
+	}>({
 		description: '',
 		rent: '',
 		deposit: '',
@@ -242,21 +260,22 @@ function SingleListing() {
 	const [isDisabled, setIsDisabled] = useState(false);
 	const user = useAppSelector((state) => state.user.value);
 
-	const handleSubmit = async (event) => {
+	const handleSubmit = async (event: React.SyntheticEvent) => {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
 			const { description, rent, deposit, occupied, availabilityDate } =
 				formValues;
-			if (!isValidNum(rent, 'min', 100))
+			if (!isValidNum(Number(rent), 'min', 100))
 				throw new Error('Invalid Rent, should at least 100');
-			if (!isValidNum(deposit, 'min', 0)) throw new Error('Invalid Deposit');
+			if (!isValidNum(Number(deposit), 'min', 0))
+				throw new Error('Invalid Deposit');
 			if (
-				rent === currListing.listing.rent &&
-				deposit === currListing.listing.deposit &&
-				description.trim() === currListing.listing.description &&
-				occupied === currListing.listing.occupied &&
-				availabilityDate === currListing.listing.availabilityDate
+				rent === currListing?.listing.rent &&
+				deposit === currListing?.listing.deposit &&
+				description.trim() === currListing?.listing.description &&
+				occupied === currListing?.listing.occupied &&
+				availabilityDate === currListing?.listing.availabilityDate
 			) {
 				dispatch(warningAlert('No fields updated'));
 				return;
@@ -275,7 +294,7 @@ function SingleListing() {
 		}
 	};
 
-	const handleChange = (event) => {
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = event.target;
 		let { type } = event.target;
 		setIsDisabled(false);
@@ -315,8 +334,9 @@ function SingleListing() {
 	// 	event.stopPropagation();
 	// };
 
-	const isOwner =
-		user && currListing?.listing && currListing.listing.listedBy === user._id;
+	const isOwner = Boolean(
+		user && currListing?.listing && currListing.listing.listedBy === user._id
+	);
 
 	return (
 		<div>
@@ -497,6 +517,6 @@ function SingleListing() {
 			)}
 		</div>
 	);
-}
+};
 
 export default SingleListing;

@@ -15,22 +15,33 @@ import { useDispatch } from 'react-redux';
 import { errorAlert, successAlert } from 'store/alert';
 import { approveApplication, handleError } from 'utils/api-calls';
 import { prettifyPhoneString } from 'utils/helpers';
+import { Application } from 'utils/types/application';
 
 const FIVE_MB = 1024 * 1024 * 5;
 
-function LessorApplicationView({
+interface LessorApplicationViewInterface {
+	application: Application;
+	handleDecline: () => void;
+	disableDeclineBtn: boolean | undefined;
+	onSuccessApprove: Function;
+}
+
+const LessorApplicationView: React.FC<LessorApplicationViewInterface> = ({
 	application,
 	handleDecline,
 	disableDeclineBtn,
 	onSuccessApprove,
-}) {
+}) => {
 	const [showApproveForm, setShowApproveForm] = useState(false);
-	const fileUploadRef = useRef();
+	const fileUploadRef = useRef<HTMLInputElement | null>(null);
 
 	const dispatch = useDispatch();
 
-	const handleFileUpload = (e, onSuccess) => {
-		const document = e.target.files[0];
+	const handleFileUpload = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		onSuccess: (document: File) => void
+	) => {
+		const document = e.target?.files && e.target.files[0];
 		if (document) {
 			if (document.type !== 'application/pdf') {
 				e.target.value = '';
@@ -42,6 +53,14 @@ function LessorApplicationView({
 				onSuccess(document);
 			}
 		}
+	};
+
+	const initialValues: {
+		text: string;
+		terms: File | null;
+	} = {
+		text: '',
+		terms: null,
 	};
 
 	return (
@@ -118,10 +137,7 @@ function LessorApplicationView({
 				)}
 				{showApproveForm && (
 					<Formik
-						initialValues={{
-							text: '',
-							terms: null,
-						}}
+						initialValues={initialValues}
 						onSubmit={async (values, { setSubmitting }) => {
 							try {
 								setSubmitting(true);
@@ -254,6 +270,6 @@ function LessorApplicationView({
 			)}
 		</Box>
 	);
-}
+};
 
 export default LessorApplicationView;

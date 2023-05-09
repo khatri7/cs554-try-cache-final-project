@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import {
 	Box,
 	Button,
@@ -16,48 +16,52 @@ import {
 	uploadListingImage,
 	deleteListingImage,
 } from 'utils/api-calls';
+import { Listing } from 'utils/types/listing';
 
 const FIVE_MB = 1024 * 1024 * 5;
 
-function UploadImageBtn({ position, listingId, handleUpdate }) {
+const UploadImageBtn: React.FC<{
+	position: number;
+	listingId: string;
+	handleUpdate: (listing: Listing) => void;
+}> = ({ position, listingId, handleUpdate }) => {
 	const [submitting, setSubmitting] = useState(false);
-	const mediaBtnRef = useRef(null);
+	const mediaBtnRef = useRef<HTMLInputElement | null>(null);
 	const dispatch = useDispatch();
-	const uploadImage = useCallback(async (e) => {
-		setSubmitting(true);
-		const mediaFile = e.target.files[0];
-		if (mediaFile) {
-			if (mediaFile.type !== 'image/jpeg' && mediaFile.type !== 'image/png') {
-				e.target.value = '';
-				dispatch(errorAlert('Image needs to be of type jpeg/png'));
-			} else if (mediaFile.size > FIVE_MB) {
-				e.target.value = '';
-				return dispatch(errorAlert('File size cannot be greater than 5MB'));
-			} else {
-				try {
-					const res = await uploadListingImage(listingId, {
-						image: e.target.files[0],
-						position,
-					});
-					if (!res.listing) throw new Error();
-					handleUpdate(res.listing);
-					dispatch(successAlert('Image uploaded successfully'));
-				} catch (err) {
-					let error = 'Unexpected error occurred';
-					if (typeof handleError(err) === 'string') error = handleError(err);
-					dispatch(errorAlert(error));
+	const uploadImage = useCallback(
+		async (e: React.ChangeEvent<HTMLInputElement>) => {
+			setSubmitting(true);
+			const mediaFile = e.target?.files && e.target.files[0];
+			if (mediaFile) {
+				if (mediaFile.type !== 'image/jpeg' && mediaFile.type !== 'image/png') {
+					e.target.value = '';
+					dispatch(errorAlert('Image needs to be of type jpeg/png'));
+				} else if (mediaFile.size > FIVE_MB) {
+					e.target.value = '';
+					return dispatch(errorAlert('File size cannot be greater than 5MB'));
+				} else {
+					try {
+						const res = await uploadListingImage(listingId, {
+							image: mediaFile,
+							position,
+						});
+						if (!res.listing) throw new Error();
+						handleUpdate(res.listing);
+						dispatch(successAlert('Image uploaded successfully'));
+					} catch (err) {
+						let error = 'Unexpected error occurred';
+						if (typeof handleError(err) === 'string') error = handleError(err);
+						dispatch(errorAlert(error));
+					}
 				}
 			}
-		}
-		e.target.value = '';
-		setSubmitting(false);
-		return true;
+			e.target.value = '';
+			setSubmitting(false);
+			return true;
+		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-	useEffect(() => {
-		if (mediaBtnRef.current)
-			mediaBtnRef.current.addEventListener('change', uploadImage);
-	}, [mediaBtnRef, uploadImage]);
+		[]
+	);
 	return (
 		<>
 			<Button
@@ -79,19 +83,20 @@ function UploadImageBtn({ position, listingId, handleUpdate }) {
 			<input
 				ref={mediaBtnRef}
 				hidden
+				onChange={uploadImage}
 				accept="image/jpeg, image/png"
 				type="file"
 			/>
 		</>
 	);
-}
+};
 
-function UploadListingMedia({
-	listingPhotos = [],
-	listingId,
-	handleUpdate = () => {},
-	close,
-}) {
+const UploadListingMedia: React.FC<{
+	listingPhotos: Array<string | null>;
+	listingId: string;
+	handleUpdate: (listing: Listing) => void;
+	close: () => void;
+}> = ({ listingPhotos = [], listingId, handleUpdate = () => {}, close }) => {
 	const dispatch = useDispatch();
 	return (
 		<Box>
@@ -106,7 +111,7 @@ function UploadListingMedia({
 								}}
 							>
 								<img
-									src={listingPhotos[position]}
+									src={listingPhotos[position]!}
 									alt="listing media"
 									className="listing__media__image"
 								/>
@@ -139,7 +144,7 @@ function UploadListingMedia({
 										}
 									}}
 								>
-									<CancelRoundedIcon size="large" color="white" />
+									<CancelRoundedIcon />
 								</IconButton>
 							</Box>
 						) : (
@@ -159,6 +164,6 @@ function UploadListingMedia({
 			</Stack>
 		</Box>
 	);
-}
+};
 
 export default UploadListingMedia;
