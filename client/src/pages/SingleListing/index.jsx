@@ -32,6 +32,7 @@ import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import PetsIcon from '@mui/icons-material/Pets';
 import { Delete, Edit } from '@mui/icons-material';
 import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
+import UploadListingMedia from 'components/UploadListingMedia';
 
 const style = {
 	position: 'absolute',
@@ -45,7 +46,7 @@ const style = {
 	p: 4,
 };
 
-function ListingToBeShown({ listing }) {
+function ListingToBeShown({ listing, isOwner, setCurrListing }) {
 	const {
 		apt,
 		bedrooms,
@@ -60,34 +61,63 @@ function ListingToBeShown({ listing }) {
 		petPolicy,
 		squareFoot,
 	} = listing;
-	const listingPhotos = photos.filter((photo) => photo !== null);
+	const listingPhotos = photos?.filter((photo) => photo !== null);
 	const laundry = useMemo(() => {
 		if (listing.laundry === 'inunit') return 'In-Unit';
 		if (listing.laundry === 'shared') return 'Shared';
 		return 'Not Available';
 	}, [listing.laundry]);
+	const [showUpdateMediaForm, setShowUpdateMediaForm] = useState(false);
 	return (
 		<Box>
 			<Grid container spacing={4}>
 				<Grid item xs={12} sm={6}>
-					<Carousel height={400} animation="slide">
-						{listingPhotos.length > 0 ? (
-							listingPhotos.map((photo) => (
-								<img
-									src={photo}
-									alt={location.name}
-									style={{ height: '100%', objectFit: 'contain' }}
-									key={photo}
-								/>
-							))
-						) : (
-							<img
-								src={NoImage}
-								alt={location.name}
-								style={{ width: '100%', objectFit: 'contain' }}
-							/>
-						)}
-					</Carousel>
+					{showUpdateMediaForm ? (
+						<UploadListingMedia
+							listingPhotos={photos}
+							listingId={listing._id}
+							handleUpdate={(updatedListing) => {
+								setCurrListing({ listing: updatedListing });
+							}}
+							close={() => {
+								setShowUpdateMediaForm(false);
+							}}
+						/>
+					) : (
+						<>
+							<Carousel height={400} animation="slide">
+								{listingPhotos.length > 0 ? (
+									listingPhotos.map((photo) => (
+										<img
+											src={photo}
+											alt={location.name}
+											style={{ height: '100%', objectFit: 'contain' }}
+											key={photo}
+										/>
+									))
+								) : (
+									<img
+										src={NoImage}
+										alt={location.name}
+										style={{ width: '100%', objectFit: 'contain' }}
+									/>
+								)}
+							</Carousel>
+							{isOwner && (
+								<Stack alignItems="center">
+									<Button
+										type="button"
+										size="small"
+										onClick={() => {
+											setShowUpdateMediaForm(true);
+										}}
+									>
+										Update Images
+									</Button>
+								</Stack>
+							)}
+						</>
+					)}
 				</Grid>
 				<Grid item xs={12} sm={6}>
 					<Typography gutterBottom variant="h4" component="p" sx={{ mt: 1 }}>
@@ -446,7 +476,11 @@ function SingleListing() {
 			</Modal>
 			<Box>
 				{currListing && currListing.listing && (
-					<ListingToBeShown listing={currListing.listing} />
+					<ListingToBeShown
+						listing={currListing.listing}
+						isOwner={isOwner}
+						setCurrListing={setCurrListing}
+					/>
 				)}
 			</Box>
 			{user?.role === 'tenant' && currListing?.listing?.occupied === false && (
