@@ -126,9 +126,13 @@ const LessorApplicationView: React.FC<LessorApplicationViewInterface> = ({
 						<Button
 							variant="contained"
 							size="large"
-							disabled={disableDeclineBtn}
+							disabled={disableDeclineBtn || application.listing.occupied}
 							onClick={() => {
-								setShowApproveForm(true);
+								if (application.listing.occupied) {
+									dispatch(errorAlert('The listing is off market!'));
+								} else {
+									setShowApproveForm(true);
+								}
 							}}
 						>
 							Approve
