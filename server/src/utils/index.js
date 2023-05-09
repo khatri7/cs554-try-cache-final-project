@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+import xss from 'xss';
 
 export const successStatusCodes = {
 	OK: 200,
@@ -87,7 +88,7 @@ export const isValidStr = (strParam, varName, compareOp, compareVal) => {
 	if (!strParam) throw badRequestErr(`You need to provide a ${varName}`);
 	if (typeof strParam !== 'string')
 		throw badRequestErr(`${varName} should be of type string`);
-	const str = strParam.trim();
+	const str = xss(strParam.trim());
 	if (str.length === 0)
 		throw badRequestErr(
 			`Empty string/string with spaces is not a valid ${varName}`
@@ -192,7 +193,7 @@ export const isValidObj = (obj) =>
  * @returns {string} the object id string if it is valid otherwise throws an error
  */
 export const isValidObjectId = (idParam, varName) => {
-	const id = isValidStr(idParam, varName || 'Id');
+	const id = isValidStr(xss(idParam), varName || 'Id');
 	if (!ObjectId.isValid(id)) {
 		if (varName) throw badRequestErr(`Invalid ${varName}`);
 		else throw badRequestErr('Invalid Object Id');
@@ -201,7 +202,7 @@ export const isValidObjectId = (idParam, varName) => {
 };
 
 export const isValidJwtString = (tokenParam) => {
-	const token = isValidStr(tokenParam, 'JWT');
+	const token = isValidStr(xss(tokenParam), 'JWT');
 	try {
 		return jwt.verify(token, process.env.JWT_SECRET);
 	} catch (e) {
@@ -214,17 +215,62 @@ export const createJwt = (data) => jwt.sign(data, process.env.JWT_SECRET);
 export const isValidLaundry = (data) => {
 	if (data !== 'inunit' && data !== 'shared' && data !== 'notavailable')
 		throw badRequestErr('Invalid laundry');
-	return data;
+	return xss(data);
 };
 
 export const isValidParking = (data) => {
 	if (data !== 'available' && data !== 'notavailable')
 		throw badRequestErr('Invalid Parking');
-	return data;
+	return xss(data);
 };
 
 export const isValidPetPolicy = (data) => {
 	if (data !== 'allowed' && data !== 'notAllowed')
 		throw badRequestErr('Invalid Pet Policy');
-	return data;
+	return xss(data);
+};
+
+export const compareArrays = (arr1, arr2) => {
+	if (arr1.length !== arr2.length) return false;
+	// eslint-disable-next-line no-plusplus
+	for (let i = 0; i < arr1.length; i++) {
+		if (arr1[i] !== arr2[i]) {
+			if (
+				(Array.isArray(arr1[i]) &&
+					Array.isArray(arr2[i]) &&
+					compareArrays(arr1[i], arr2[i])) ||
+				(isValidObj(arr1[i]) &&
+					isValidObj(arr2[i]) &&
+					// eslint-disable-next-line no-use-before-define
+					deepEquality(arr1[i], arr2[i]))
+			)
+				// eslint-disable-next-line no-continue
+				continue;
+			return false;
+		}
+	}
+	return true;
+};
+
+export const deepEquality = (obj1, obj2) => {
+	const obj1keys = Object.keys(obj1);
+	const obj2keys = Object.keys(obj2);
+	if (obj1keys.length !== obj2keys.length) return false;
+	// eslint-disable-next-line no-restricted-syntax
+	for (const key of obj1keys) {
+		if (obj1[key] !== obj2[key]) {
+			if (
+				(Array.isArray(obj1[key]) &&
+					Array.isArray(obj2[key]) &&
+					compareArrays(obj1[key], obj2[key])) ||
+				(isValidObj(obj1[key]) &&
+					isValidObj(obj2[key]) &&
+					deepEquality(obj1[key], obj2[key]))
+			)
+				// eslint-disable-next-line no-continue
+				continue;
+			return false;
+		}
+	}
+	return true;
 };

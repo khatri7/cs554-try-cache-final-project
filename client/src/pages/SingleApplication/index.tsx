@@ -97,6 +97,8 @@ const SingleApplication: React.FC<{}> = () => {
 
 	const handlePayment = async () => {
 		try {
+			if (application.listing.occupied)
+				throw new Error('Listing is off market');
 			setInitiatingPayment(true);
 			const res = await makePayment(application._id);
 			if (!res.paymentUrl) throw new Error();
@@ -146,6 +148,9 @@ const SingleApplication: React.FC<{}> = () => {
 						Your completed application will be sent to the lessor only once you
 						complete the payment
 					</FormHelperText>
+				)}
+				{application.listing.occupied && (
+					<Chip variant="filled" label="OFF MARKET" sx={{ mt: 1 }} />
 				)}
 			</Box>
 			{role === 'lessor' && (
@@ -200,6 +205,8 @@ const SingleApplication: React.FC<{}> = () => {
 							onSubmit={async (values, { setSubmitting }) => {
 								try {
 									setSubmitting(true);
+									if (application.listing.occupied)
+										throw new Error('Listing is off market!');
 									const reqObj = {
 										...values,
 										documents: values.documents.filter((doc) => doc !== null),
@@ -295,7 +302,7 @@ const SingleApplication: React.FC<{}> = () => {
 											variant="contained"
 											sx={{ alignSelf: 'flex-end' }}
 											type="submit"
-											disabled={isSubmitting}
+											disabled={isSubmitting || application.listing.occupied}
 										>
 											Complete Application and Make Payment
 										</Button>
@@ -347,7 +354,7 @@ const SingleApplication: React.FC<{}> = () => {
 							size="large"
 							variant="contained"
 							onClick={handlePayment}
-							disabled={initiatingPayment}
+							disabled={initiatingPayment || application.listing.occupied}
 						>
 							Complete Payment
 						</Button>

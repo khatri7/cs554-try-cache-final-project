@@ -35,10 +35,15 @@ export const getApplicationById = async (idParam, currUser) => {
 	const { firstName, lastName, email, phone } = await getUserById(
 		application.tenant._id.toString()
 	);
+	const { occupied } = await getListingById(application.listing._id.toString());
 	if (application.status === applicationStatus.PAYMENT_PENDING)
 		delete application.notes.COMPLETED;
 	return {
 		...application,
+		listing: {
+			...application.listing,
+			occupied,
+		},
 		tenant: {
 			...application.tenant,
 			firstName,

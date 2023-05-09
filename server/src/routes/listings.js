@@ -42,7 +42,7 @@ router
 				throw forbiddenErr(
 					'You cannot create a listing if you have registered as a tenant'
 				);
-			const listingObj = isValidCreateListingObj(req.body);
+			const listingObj = await isValidCreateListingObj(req.body);
 			const listing = await createListing(listingObj, validatedUser);
 			res.status(successStatusCodes.CREATED).json({ listing });
 		})

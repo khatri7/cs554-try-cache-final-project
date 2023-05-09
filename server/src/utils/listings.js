@@ -2,6 +2,7 @@ import moment from 'moment';
 import xss from 'xss';
 import {
 	badRequestErr,
+	deepEquality,
 	isValidLaundry,
 	isValidNum,
 	isValidObj,
@@ -10,6 +11,10 @@ import {
 	isValidStr,
 } from '.';
 import { isValidDateStr } from './users';
+import {
+	getLocationDetails,
+	getPlacesAutocompleteLocation,
+} from '../configs/placesApi';
 
 export const isValidAvailabilityDate = (dateStr) => {
 	const momentDate = isValidDateStr(xss(dateStr), 'Availability Date');
@@ -22,9 +27,63 @@ export const isValidAvailabilityDate = (dateStr) => {
 	return momentDate.format('MM-DD-YYYY');
 };
 
-export const isValidCreateListingObj = (listingObj) => {
+const isValidListingLocation = async (location) => {
+	if (!isValidObj(location)) throw badRequestErr('Invalid location');
+	if (!location.placeId || !location.streetAddress)
+		throw badRequestErr('Invalid Location');
+	const textSearchResult = await getPlacesAutocompleteLocation(
+		location.streetAddress.trim(),
+		location.placeId.trim()
+	);
+	if (!textSearchResult) throw badRequestErr('Invalid Location');
+	const res = await getLocationDetails(location.placeId.trim());
+	if (res.status !== 'OK') throw badRequestErr('Invalid Location');
+	const {
+		place_id: placeId,
+		name,
+		formatted_address: streetAddress,
+		url,
+		vicinity,
+		address_components: addressComponents,
+		types,
+	} = res.result;
+	const { lat, lng } = JSON.parse(
+		JSON.stringify(res.result?.geometry?.location)
+	);
+	if (
+		!deepEquality(
+			{
+				name,
+				placeId,
+				streetAddress,
+				url,
+				vicinity,
+				addressComponents,
+				types,
+				lat,
+				lng,
+			},
+			location
+		)
+	) {
+		throw badRequestErr('Invalid location');
+	}
+	return {
+		name,
+		placeId,
+		streetAddress,
+		url,
+		vicinity,
+		addressComponents,
+		types,
+		lat,
+		lng,
+	};
+};
+
+export const isValidCreateListingObj = async (listingObj) => {
 	if (!isValidObj(listingObj)) throw badRequestErr('Expected a listing object');
-	if (!isValidObj(listingObj.location)) throw badRequestErr('Invalid location');
+	const location = await isValidListingLocation(listingObj.location);
 	return {
 		apt:
 			listingObj.apt !== undefined &&
@@ -45,8 +104,7 @@ export const isValidCreateListingObj = (listingObj) => {
 		rent: isValidNum(listingObj.rent, 'Rent', 'min', 100),
 		deposit: isValidNum(listingObj.deposit, 'Deposit', 'min', 0),
 		availabilityDate: isValidAvailabilityDate(listingObj.availabilityDate),
-		location: listingObj.location,
-
+		location,
 		laundry: isValidLaundry(xss(listingObj.laundry)),
 		petPolicy: isValidPetPolicy(xss(listingObj.petPolicy)),
 		parking: isValidParking(xss(listingObj.parking)),
