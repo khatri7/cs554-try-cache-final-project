@@ -209,7 +209,7 @@ export const approveApplication = async (
 
 	if (validatedUser.role !== 'lessor')
 		throw forbiddenErr(
-			'You cannot udpate this application if you have registered as a tenant'
+			'You cannot update this application if you have registered as a tenant'
 		);
 
 	const applicationCollection = await applications();
