@@ -3,7 +3,7 @@ import { User } from '.';
 export interface Application {
 	_id: string;
 	listing: Listing;
-	lease: string;
+	terms: string | null;
 	createdAt: Date;
 	updatedAt: number;
 	status: string;

@@ -15,15 +15,16 @@ import PlacesAutocomplete from 'components/PlacesAutocomplete';
 import { getSelectedAreaCoordinates, isValidNum } from 'utils/helpers';
 import { getListings, handleError } from 'utils/api-calls';
 import ListingCard from 'components/ListingCard';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { errorAlert } from 'store/alert';
 import { useDispatch } from 'react-redux';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
 
 function Listings() {
 	const location = useLocation();
 	const dispatch = useDispatch();
-
+	const navigate = useNavigate();
 	const locationFromHome = location?.state?.location;
 
 	const [loading, setLoading] = useState(false);
@@ -315,14 +316,67 @@ function Listings() {
 				</Typography>
 			)}
 			<Stack gap={4}>
-				{filtersApplied &&
-					filteredListings.map((listing) => (
-						<ListingCard key={listing._id} listing={listing} />
-					))}
-				{!filtersApplied &&
-					listings.map((listing) => (
-						<ListingCard key={listing._id} listing={listing} />
-					))}
+				{filtersApplied && (
+					<>
+						{filteredListings.length > 0 && (
+							<Box>
+								<GoogleMap
+									mapContainerStyle={{ height: '240px' }}
+									zoom={11}
+									center={{
+										lat: listings[0].location.lat,
+										lng: listings[0].location.lng,
+									}}
+								>
+									{filteredListings.map((listing) => (
+										<Marker
+											key={listing._id}
+											position={{
+												lat: listing.location.lat,
+												lng: listing.location.lng,
+											}}
+										/>
+									))}
+								</GoogleMap>
+							</Box>
+						)}
+						{filteredListings.map((listing) => (
+							<ListingCard key={listing._id} listing={listing} />
+						))}
+					</>
+				)}
+				{!filtersApplied && (
+					<>
+						{listings.length > 0 && (
+							<Box>
+								<GoogleMap
+									mapContainerStyle={{ height: '240px' }}
+									zoom={11}
+									center={{
+										lat: listings[0].location.lat,
+										lng: listings[0].location.lng,
+									}}
+								>
+									{listings.map((listing) => (
+										<Marker
+											onClick={() => {
+												navigate(`/listings/${listing._id}`);
+											}}
+											key={listing._id}
+											position={{
+												lat: listing.location.lat,
+												lng: listing.location.lng,
+											}}
+										/>
+									))}
+								</GoogleMap>
+							</Box>
+						)}
+						{listings.map((listing) => (
+							<ListingCard key={listing._id} listing={listing} />
+						))}
+					</>
+				)}
 			</Stack>
 		</Box>
 	);

@@ -28,7 +28,11 @@ const ONE_DAY = 86400;
 export const getListingById = async (idParam) => {
 	const id = isValidObjectId(idParam);
 	const listingFromCache = await redis.read(`tc_listing_${id}`);
-	if (listingFromCache) return listingFromCache;
+	if (listingFromCache) {
+		listingFromCache._id = new ObjectId(listingFromCache._id);
+		listingFromCache.listedBy = new ObjectId(listingFromCache.listedBy);
+		return listingFromCache;
+	}
 	const listingsCollection = await listings();
 	const listing = await listingsCollection.findOne({ _id: new ObjectId(id) });
 	if (!listing) throw notFoundErr('No listing found for the provided id');
@@ -51,10 +55,19 @@ const checkListingExists = async (location, apt) => {
 const updateLocalityCache = async (listing, remove = false) => {
 	const localityKeys = await redis.getKeys('tc_locality_*');
 	if (remove) {
-		const localityToUpdate = await localityKeys.find(async (locality) => {
-			const localityData = await redis.read(locality);
-			return localityData?.listings?.includes(listing._id.toString());
-		});
+		let localityToUpdate = await Promise.all(
+			localityKeys.map(async (locality) => {
+				const localityData = await redis.read(locality);
+				const result = localityData?.listings?.includes(listing._id.toString());
+				if (result) return localityData;
+				return false;
+			})
+		);
+		localityToUpdate = localityToUpdate.filter(
+			(locality) => locality !== false
+		);
+		localityToUpdate =
+			localityToUpdate.length > 0 ? localityToUpdate[0] : undefined;
 		if (localityToUpdate) {
 			const localityData = await redis.read(localityToUpdate);
 			const updatedListings = localityData?.listings?.filter(
@@ -73,30 +86,40 @@ const updateLocalityCache = async (listing, remove = false) => {
 	} else {
 		const listingAddressComponents = listing?.location?.addressComponents;
 		if (listingAddressComponents) {
-			const localityToUpdate = await localityKeys.find(async (locality) => {
-				const localityData = await redis.read(locality);
-				if (
-					!localityData ||
-					!locality.addressComponents ||
-					!Array.isArray(locality.addressComponents)
-				)
-					return false;
-				return locality.addressComponents.every((component) =>
-					listingAddressComponents.some(
-						(lComponent) =>
-							JSON.stringify(component) === JSON.stringify(lComponent)
+			let localityToUpdate = await Promise.all(
+				localityKeys.map(async (locality) => {
+					const localityData = await redis.read(locality);
+					if (
+						!localityData ||
+						!localityData.addressComponents ||
+						!Array.isArray(localityData.addressComponents)
 					)
-				);
-			});
+						return false;
+					const result = localityData.addressComponents.every((component) =>
+						listingAddressComponents.some(
+							(lComponent) =>
+								JSON.stringify(component) === JSON.stringify(lComponent)
+						)
+					);
+					if (result) return localityData;
+					return result;
+				})
+			);
+			localityToUpdate = localityToUpdate.filter(
+				(locality) => locality !== false
+			);
+			localityToUpdate =
+				localityToUpdate.length > 0 ? localityToUpdate[0] : undefined;
 			if (localityToUpdate) {
 				const localityData = await redis.read(localityToUpdate);
 				if (localityData?.listings?.indexOf(listing._id.toString()) === -1) {
+					const updatedLocalityData = {
+						...localityData,
+						listings: [...localityData.listings, listing._id.toString()],
+					};
 					await redis.cache(
 						localityToUpdate,
-						{
-							...localityData,
-							listings: [...localityData.listings, listing._id.toString()],
-						},
+						updatedLocalityData,
 						{ EX: ONE_DAY },
 						true
 					);

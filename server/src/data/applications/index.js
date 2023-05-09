@@ -322,7 +322,7 @@ export const updatePaymentStatus = async (
 	const applicationCollection = await applications();
 	if (paymentSession.payment_status !== 'paid')
 		throw badRequestErr('The payment has not been completed');
-	const updatedAt = Date.now();
+	const updatedAt = new Date();
 	const applicationAck = await applicationCollection.updateOne(
 		{ _id: application._id },
 		{
