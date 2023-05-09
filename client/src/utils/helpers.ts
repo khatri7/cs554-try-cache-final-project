@@ -82,7 +82,9 @@ export const isValidDateStr = (date: string) => {
 			.padStart(2, '0')}-${day.toString().padStart(2, '0')}`
 	);
 	if (!momentDate.isValid()) return false;
-	return true;
+	const difference = moment().diff(momentDate, 'days');
+	if (difference > 0) return false;
+	return momentDate.format('MM-DD-YYYY');
 };
 
 export const compareDateStr = (

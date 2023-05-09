@@ -103,7 +103,9 @@ router
 				throw forbiddenErr(
 					'You cannot update a listing if you have registered as a tenant'
 				);
+			console.log(req.body, 'req body');
 			const listingObj = isValidUpdateListingObj(req.body);
+			console.log(listingObj, 'in routes');
 			const listing = await updateListing(listingId, validatedUser, listingObj);
 			res.status(successStatusCodes.CREATED).json({ listing });
 		})

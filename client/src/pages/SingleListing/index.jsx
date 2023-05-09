@@ -23,8 +23,6 @@ import { errorAlert } from 'store/alert';
 import { DELETE, GET, PATCH, handleError } from 'utils/api-calls';
 import { isValidNum, isValidStr } from 'utils/helpers';
 import toast, { Toaster } from 'react-hot-toast';
-// import 'slick-carousel/slick/slick.css';
-// import 'slick-carousel/slick/slick-theme.css';
 import Carousel from 'react-material-ui-carousel';
 import NoImage from 'components/ListingCard/no-image.jpeg';
 import { useAppSelector } from 'hooks';
@@ -178,6 +176,17 @@ function SingleListing() {
 	const handleClose = () => setOpen(false);
 	const handleDeleteModalOpen = () => setDeleteModal(true);
 	const { id } = useParams();
+	const [currListing, setCurrListing] = useState();
+	useEffect(() => {
+		async function getListing() {
+			const listing = await GET(`/listings/${id}`);
+			setCurrListing(listing);
+		}
+
+		getListing();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	const [formValues, setFormValues] = useState({
 		description: '',
 		rent: '',
@@ -185,23 +194,30 @@ function SingleListing() {
 		availabilityDate: null,
 		occupied: '',
 	});
-	const [currListing, setCurrListing] = useState();
-	const [isDisabled, setIsDisabled] = useState(false);
-	const user = useAppSelector((state) => state.user.value);
 
 	useEffect(() => {
-		async function getListing() {
-			const listing = await GET(`/listings/${id}`);
-			setCurrListing(listing);
+		if (currListing?.listing) {
+			const { rent, description, deposit, occupied, availabilityDate } =
+				currListing.listing;
+			setFormValues({
+				rent,
+				description,
+				deposit,
+				occupied,
+				availabilityDate: availabilityDate ? moment(availabilityDate) : '',
+			});
 		}
-		getListing();
-	}, [id]);
+	}, [currListing]);
+
+	const [isDisabled, setIsDisabled] = useState(false);
+	const user = useAppSelector((state) => state.user.value);
 
 	const handleSubmit = async (event) => {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
 			const { description, rent, deposit } = formValues;
+
 			if (
 				!isValidStr(description) &&
 				!isValidNum(rent, 'min', 50) &&
@@ -258,6 +274,10 @@ function SingleListing() {
 		}
 	};
 
+	const handleBackdropClick = (event) => {
+		event.stopPropagation();
+	};
+
 	const isOwner =
 		user && currListing?.listing && currListing.listing.listedBy === user._id;
 
@@ -285,6 +305,11 @@ function SingleListing() {
 				onClose={handleSubmit}
 				aria-labelledby="modal-modal-title"
 				aria-describedby="modal-modal-description"
+				slotProps={{
+					backdrop: {
+						onClick: handleBackdropClick,
+					},
+				}}
 			>
 				<Box sx={style}>
 					<Typography id="modal-modal-title" variant="h6" component="h2">
@@ -303,6 +328,7 @@ function SingleListing() {
 						value={formValues.rent}
 						onChange={handleChange}
 					/>
+
 					<TextField
 						type="number"
 						name="deposit"
@@ -310,6 +336,7 @@ function SingleListing() {
 						value={formValues.deposit}
 						onChange={handleChange}
 					/>
+
 					<FormControl fullWidth>
 						<LocalizationProvider dateAdapter={AdapterMoment}>
 							<DatePicker
@@ -318,6 +345,7 @@ function SingleListing() {
 								format="MM-DD-YYYY"
 								minDate={moment()}
 								onChange={(newValue) => {
+									setIsDisabled(false);
 									setFormValues({
 										...formValues,
 										availabilityDate: newValue
@@ -387,7 +415,7 @@ function SingleListing() {
 					<ListingToBeShown listing={currListing.listing} />
 				)}
 			</Box>
-			{user?.role === 'tenant' && currListing?.listing?.occupied === false && (
+			{user?.role === 'tenant' && (
 				<Button
 					variant="contained"
 					sx={{ mt: 4 }}
