@@ -15,7 +15,6 @@ import {
 import useQuery from 'hooks/useQuery';
 import { chipColor } from 'pages/MyApplications';
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import {
 	completeApplication,
@@ -33,19 +32,21 @@ import {
 import { Field, Form, Formik } from 'formik';
 import UploadFileBtn from 'components/UploadFileBtn';
 import { TextInput } from 'components/FormikMuiFields';
+import { useAppDispatch, useAppSelector } from 'hooks';
+import { Application } from 'utils/types/application';
 import LessorApplicationView from './LessorApplicationView';
 import Document from './Document.svg';
 
 const FIVE_MB = 1024 * 1024 * 5;
 
-function SingleApplication() {
+const SingleApplication: React.FC<{}> = () => {
 	const { id } = useParams();
 	const { loading, data, error } = useQuery(`/applications/${id}`);
 	const [disableDeclineBtn, setDisableDeclineBtn] = useState(false);
-	const [application, setApplication] = useState(null);
+	const [application, setApplication] = useState<Application | null>(null);
 	const [initiatingPayment, setInitiatingPayment] = useState(false);
-	const role = useSelector((state) => state.user.value?.role);
-	const dispatch = useDispatch();
+	const role = useAppSelector((state) => state.user.value?.role);
+	const dispatch = useAppDispatch();
 
 	useEffect(() => {
 		if (data?.application) setApplication(data.application);
@@ -72,8 +73,11 @@ function SingleApplication() {
 		}
 	};
 
-	const handleFileUpload = (e, onSuccess) => {
-		const document = e.target.files[0];
+	const handleFileUpload = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		onSuccess: (document: File) => void
+	) => {
+		const document = e.target?.files && e.target.files[0];
 		if (document) {
 			if (document.type !== 'application/pdf') {
 				e.target.value = '';
@@ -87,7 +91,7 @@ function SingleApplication() {
 		}
 	};
 
-	const onSuccessApprove = (updatedApplication) => {
+	const onSuccessApprove = (updatedApplication: Application) => {
 		setApplication(updatedApplication);
 	};
 
@@ -123,9 +127,7 @@ function SingleApplication() {
 				<Chip
 					label={application.status}
 					color={chipColor[application.status] || 'primary'}
-					variant={
-						application.status === 'COMPLETED' ? 'contained' : 'outlined'
-					}
+					variant={application.status === 'COMPLETED' ? 'filled' : 'outlined'}
 				/>
 				{role === 'tenant' && application.status === 'REVIEW' && (
 					<FormHelperText>
@@ -376,9 +378,7 @@ function SingleApplication() {
 								<Tooltip title="View">
 									<IconButton
 										onClick={() => {
-											window.open(application.terms, {
-												target: '__blank',
-											});
+											window.open(application.terms!, '_blank');
 										}}
 									>
 										<OpenInNew />
@@ -391,6 +391,6 @@ function SingleApplication() {
 			)}
 		</>
 	);
-}
+};
 
 export default SingleApplication;
