@@ -3,22 +3,42 @@ import redis from 'redis';
 /* use this for local redis server */
 // const client = redis.createClient();
 
-/* use this for redis cloud */
-const client = redis.createClient({
-	password: process.env.REDIS_CLOUD_PASSWORD,
-	socket: {
-		host: process.env.REDIS_CLOUD_HOST,
-		port: process.env.REDIS_CLOUD_PORT,
-	},
-});
-
 let isReady = false;
 
-client.connect().then(() => {
+/* use this for redis cloud */
+const getEnvVariables = () => {
+	return new Promise((resolve) => {
+		if (process.env.REDIS_CLOUD_HOST) {
+			resolve();
+		} else {
+			const checkInterval = setInterval(() => {
+				if (process.env.REDIS_CLOUD_HOST) {
+					clearInterval(checkInterval);
+					resolve();
+				}
+			}, 100);
+		}
+	});
+};
+
+let client;
+
+getEnvVariables().then(() => {
+	client = redis.createClient({
+		password: process.env.REDIS_CLOUD_PASSWORD,
+		socket: {
+			host: process.env.REDIS_CLOUD_HOST,
+			port: process.env.REDIS_CLOUD_PORT,
+		},
+	});
+});
+/* end of redis cloud config */
+
+client?.connect().then(() => {
 	isReady = true;
 });
 
-client.on('error', (err) => {
+client?.on('error', (err) => {
 	console.log('Redis Client Error', err);
 	isReady = false;
 });
@@ -93,6 +113,11 @@ const delCache = async (key) => {
 	}
 };
 
+const delAllCache = async () => {
+	const keys = await getKeys('tc_*');
+	await Promise.all(keys.map((key) => delCache(key)));
+};
+
 export default {
 	cache,
 	read,
@@ -100,4 +125,5 @@ export default {
 	getTopTenPopularLocalities,
 	getKeys,
 	delCache,
+	delAllCache,
 };
