@@ -61,7 +61,7 @@ const updateLocalityCache = async (listing, remove = false) => {
 			localityKeys.map(async (locality) => {
 				const localityData = await redis.read(locality);
 				const result = localityData?.listings?.includes(listing._id.toString());
-				if (result) return localityData;
+				if (result) return locality;
 				return false;
 			})
 		);
@@ -103,7 +103,7 @@ const updateLocalityCache = async (listing, remove = false) => {
 								JSON.stringify(component) === JSON.stringify(lComponent)
 						)
 					);
-					if (result) return localityData;
+					if (result) return locality;
 					return result;
 				})
 			);
@@ -150,7 +150,7 @@ export const createListing = async (listingObjParam, user) => {
 		laundry,
 		petPolicy,
 		parking,
-	} = isValidCreateListingObj(listingObjParam);
+	} = await isValidCreateListingObj(listingObjParam);
 	await checkListingExists(location, apt);
 	const listingObj = {
 		listedBy: new ObjectId(user._id),
@@ -231,7 +231,7 @@ const cacheListings = async (searchArea, listingsArr) => {
 
 export const getListings = async (searchAreaParam) => {
 	const searchArea = isValidSearchAreaQuery(searchAreaParam);
-	const placeDetails = await getLocationDetails(searchArea.placeId);
+	const placeDetails = await getLocationDetails(searchArea.placeId, 'us');
 	if (placeDetails.status !== 'OK') throw badRequestErr('Invalid Locality');
 	if (placeDetails?.result?.address_components)
 		searchArea.addressComponents = placeDetails.result.address_components;

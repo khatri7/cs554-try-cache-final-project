@@ -1,15 +1,17 @@
 import axios from 'axios';
 
-export const getLocationDetails = async (placeId) => {
+export const getLocationDetails = async (placeId, region) => {
 	const res = await axios.get(
-		`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+		`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${
+			process.env.GOOGLE_MAPS_API_KEY
+		}${region ? `region=${region}` : ''}`
 	);
 	return res?.data ?? {};
 };
 
 const getPlacesAutoCompleteResponse = async (input, types = 'locality') => {
 	const res = await axios.get(
-		`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&types=${types}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+		`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&types=${types}&region=us&key=${process.env.GOOGLE_MAPS_API_KEY}`
 	);
 	return res?.data ?? {};
 };
@@ -33,4 +35,17 @@ export const getPlacesAutocompleteLocality = async (place, placeId) => {
 	);
 	if (!locality) return null;
 	return locality;
+};
+
+export const getPlacesAutocompleteLocation = async (place, placeId) => {
+	const res = await getPlacesAutoCompleteResponse(
+		place,
+		'premise|street_address'
+	);
+	if (res.status !== 'OK') return null;
+	const location = res.predictions.find(
+		(prediction) => prediction.place_id === placeId
+	);
+	if (!location) return null;
+	return location;
 };
