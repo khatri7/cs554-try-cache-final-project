@@ -17,6 +17,7 @@ interface Listing {
 	streetAddress: string;
 	apt: number | null;
 	listedBy: string;
+	occupied?: boolean;
 }
 
 interface Notes {
