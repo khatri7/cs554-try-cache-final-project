@@ -19,7 +19,6 @@ import {
 	rejectapplication,
 	completeApplication,
 	updatePaymentStatus,
-	deleteApplications,
 } from '../data/applications';
 import {
 	applicationStatus,
@@ -28,6 +27,7 @@ import {
 import { getUserById } from '../data/users';
 import { createCheckoutSession, getCheckoutSession } from '../configs/stripe';
 import { uploadMedia, uploadMedias } from '../middlewares/uploadMedia';
+import { checkListingOccupied } from '../data/listings';
 
 const router = express.Router();
 
@@ -41,32 +41,17 @@ router.route('/my-applications').get(
 	})
 );
 
-router
-	.route('/:id')
-	.get(
-		authenticateToken,
-		reqHandlerWrapper(async (req, res) => {
-			const { user } = req;
-			const validatedUser = isValidUserAuthObj(user);
-			let { id } = req.params;
-			id = isValidObjectId(xss(id));
-			const application = await getApplicationById(id, validatedUser);
-			res.json({ application });
-		})
-	)
-	.delete(
-		authenticateToken,
-		reqHandlerWrapper(async (req, res) => {
-			const { user } = req;
-			const validatedUser = isValidUserAuthObj(user);
-			if (validatedUser.role !== 'lessor')
-				throw forbiddenErr('You cannot delete this if you are not a Lessor.');
-			let { id } = req.params;
-			id = isValidObjectId(xss(id));
-			const updatedApplications = await deleteApplications(id);
-			res.json({ updatedApplications });
-		})
-	);
+router.route('/:id').get(
+	authenticateToken,
+	reqHandlerWrapper(async (req, res) => {
+		const { user } = req;
+		const validatedUser = isValidUserAuthObj(user);
+		let { id } = req.params;
+		id = isValidObjectId(xss(id));
+		const application = await getApplicationById(id, validatedUser);
+		res.json({ application });
+	})
+);
 
 router.route('/:id/payment').post(
 	authenticateToken,
@@ -81,6 +66,7 @@ router.route('/:id/payment').post(
 			validatedUser._id
 		);
 		const application = await getApplicationById(applicationId, validatedUser);
+		await checkListingOccupied(application.listing._id.toString());
 		if (application.status !== applicationStatus.PAYMENT_PENDING)
 			throw badRequestErr('You cannot initiate a payment at current status');
 		const session = await createCheckoutSession(
@@ -161,6 +147,7 @@ router.route('/').post(
 				'You cannot create an Application if you have registered as a lessor'
 			);
 		const appliObj = isValidCreateApplicationObj(req.body);
+		await checkListingOccupied(appliObj.listingId.toString());
 		const application = await createApplication(
 			appliObj,
 			validatedUser,
@@ -184,7 +171,6 @@ router.route('/:id/lessor/reject').post(
 				'You cannot update an Application if are logged in as Tenant'
 			);
 		const application = await rejectapplication(id, validatedUser);
-
 		res.status(successStatusCodes.CREATED).json({ application });
 	})
 );
@@ -211,7 +197,6 @@ router.route('/:id/lessor/approve').post(
 			validatedUser,
 			req.file
 		);
-
 		res.status(successStatusCodes.CREATED).json({ application });
 	})
 );
@@ -233,6 +218,8 @@ router.route('/:id/tenant/complete').post(
 		const text = xss(req.body.text)
 			? isValidStr(req.body.text, 'parameter text')
 			: '';
+		const application = await getApplicationById(id, validatedUser);
+		await checkListingOccupied(application.listing._id.toString());
 		if (validatedUser.role !== 'tenant')
 			throw forbiddenErr('You cannot update this information as Lessor.');
 		await completeApplication(id, text, validatedUser, req.files.documents);

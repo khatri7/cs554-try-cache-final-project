@@ -11,7 +11,7 @@ import {
 } from '.';
 import { isValidDateStr } from './users';
 
-const isValidAvailabilityDate = (dateStr) => {
+export const isValidAvailabilityDate = (dateStr) => {
 	const momentDate = isValidDateStr(xss(dateStr), 'Availability Date');
 	if (!momentDate.isValid()) throw badRequestErr('Invalid Availability Date');
 	const difference = moment().diff(momentDate, 'days');
@@ -102,7 +102,10 @@ export const isValidUpdateListingObj = (listingObj) => {
 			? isValidNum(listingObj.deposit, 'Deposit', 'min', 0)
 			: null,
 		availabilityDate: listingObj.availabilityDate
-			? isValidAvailabilityDate(xss(listingObj.availabilityDate))
+			? isValidDateStr(
+					xss(listingObj.availabilityDate),
+					'Availability Date'
+			  ).format('MM-DD-YYYY')
 			: null,
 		occupied: listingObj.occupied ? listingObj.occupied : null,
 	};

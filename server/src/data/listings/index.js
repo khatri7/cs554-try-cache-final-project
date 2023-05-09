@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { listings } from '../../configs/mongodb';
+import { applications, listings } from '../../configs/mongodb';
 import {
 	badRequestErr,
 	forbiddenErr,
@@ -10,6 +10,7 @@ import {
 	isValidStr,
 } from '../../utils';
 import {
+	isValidAvailabilityDate,
 	isValidCreateListingObj,
 	isValidSearchAreaQuery,
 	isValidUpdateListingObj,
@@ -22,6 +23,7 @@ import {
 	getLocationDetails,
 	getPlacesAutocompleteLocality,
 } from '../../configs/placesApi';
+
 // One day in seconds
 const ONE_DAY = 86400;
 
@@ -260,11 +262,12 @@ export const updateListing = async (listingIdParam, user, listingObjParam) => {
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 	const { description, rent, deposit, availabilityDate, occupied } =
 		isValidUpdateListingObj(listingObjParam);
-
 	const oldListing = await getListingById(id);
 	if (validatedUser._id !== oldListing.listedBy.toString()) {
 		throw forbiddenErr('You cannot update a listing if you are not the owner');
 	}
+	if (availabilityDate && availabilityDate !== oldListing.availabilityDate)
+		isValidAvailabilityDate(availabilityDate);
 	const updateListingObj = {
 		apt: oldListing.apt,
 		description: description || oldListing.description,
@@ -383,6 +386,15 @@ export const deleteUploadImageListingImage = async (
 	return updateListingAck.value;
 };
 
+const deleteAssociatedApplications = async (listingId) => {
+	const id = isValidObjectId(listingId);
+	const applicationCollection = await applications();
+	const updatedAppCol = await applicationCollection.deleteMany({
+		'listing._id': new ObjectId(id),
+	});
+	return updatedAppCol;
+};
+
 export const deleteListing = async (id, user) => {
 	const listingIdParam = isValidObjectId(id);
 	const validatedUser = isValidUserAuthObj(user);
@@ -399,6 +411,7 @@ export const deleteListing = async (id, user) => {
 	});
 	if (deletionInfo.lastErrorObject.n === 0)
 		throw notFoundErr('Listing Not Found');
+	await deleteAssociatedApplications(listingIdParam);
 	await redis.delCache(`tc_listing_${oldListing._id.toString()}`);
 	await updateLocalityCache(oldListing, true);
 	return { listingId: listingIdParam, deleted: true };
@@ -434,4 +447,17 @@ export const getPopularLocalities = async () => {
 		})
 	);
 	return localities.filter((locality) => locality !== null);
+};
+
+export const checkListingOccupied = async (idParam) => {
+	const id = isValidObjectId(idParam);
+	const listingsCollection = await listings();
+	const listing = await listingsCollection.findOne({ _id: new ObjectId(id) });
+	if (!listing) throw notFoundErr('No listing found for the provided id');
+	const occupiedStatus = listing.occupied;
+	if (occupiedStatus)
+		throw badRequestErr(
+			'Sorry, The listing is currently Occupied. Please try again later.'
+		);
+	return false;
 };

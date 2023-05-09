@@ -1,27 +1,54 @@
 import redis from 'redis';
 
-/* use this for local redis server */
-// const client = redis.createClient();
-
-/* use this for redis cloud */
-const client = redis.createClient({
-	password: process.env.REDIS_CLOUD_PASSWORD,
-	socket: {
-		host: process.env.REDIS_CLOUD_HOST,
-		port: process.env.REDIS_CLOUD_PORT,
-	},
-});
-
 let isReady = false;
 
-client.connect().then(() => {
-	isReady = true;
-});
+/* use this for local redis server */
+// const client = redis.createClient();
+// client.connect().then(() => {
+// 	isReady = true;
+// });
 
-client.on('error', (err) => {
-	console.log('Redis Client Error', err);
-	isReady = false;
+// client.on('error', (err) => {
+// 	console.log('Redis Client Error', err);
+// 	isReady = false;
+// });
+/* end of local redis server config */
+
+/* use this for redis cloud */
+const getEnvVariables = () => {
+	return new Promise((resolve) => {
+		if (process.env.REDIS_CLOUD_HOST) {
+			resolve(true);
+		} else {
+			const checkInterval = setInterval(() => {
+				if (process.env.REDIS_CLOUD_HOST) {
+					clearInterval(checkInterval);
+					resolve(true);
+				}
+			}, 100);
+		}
+	});
+};
+
+let client;
+
+getEnvVariables().then(() => {
+	client = redis.createClient({
+		password: process.env.REDIS_CLOUD_PASSWORD,
+		socket: {
+			host: process.env.REDIS_CLOUD_HOST,
+			port: process.env.REDIS_CLOUD_PORT,
+		},
+	});
+	client.connect().then(() => {
+		isReady = true;
+	});
+	client.on('error', (err) => {
+		console.log('Redis Client Error', err);
+		isReady = false;
+	});
 });
+/* end of redis cloud config */
 
 const cache = async (key, value, options = {}, stringify = false) => {
 	try {
@@ -93,6 +120,11 @@ const delCache = async (key) => {
 	}
 };
 
+const delAllCache = async () => {
+	const keys = await getKeys('tc_*');
+	await Promise.all(keys.map((key) => delCache(key)));
+};
+
 export default {
 	cache,
 	read,
@@ -100,4 +132,5 @@ export default {
 	getTopTenPopularLocalities,
 	getKeys,
 	delCache,
+	delAllCache,
 };

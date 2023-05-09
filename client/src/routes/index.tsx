@@ -17,6 +17,7 @@ import {
 } from 'react-router-dom';
 import { useAppSelector } from 'hooks';
 import MyProfile from 'pages/MyProfile';
+import ErrorPage from 'pages/404';
 import ProtectedRoutes from './ProtectedRoutes';
 
 function Routes() {
@@ -49,6 +50,7 @@ function Routes() {
 				<Route path="/applications/:id" element={<SingleApplication />} />
 				<Route path="/my-profile" element={<MyProfile />} />
 			</Route>
+			<Route path="*" element={<ErrorPage />} />
 		</RRDRoutes>
 	);
 }

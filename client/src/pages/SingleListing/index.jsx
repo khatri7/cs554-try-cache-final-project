@@ -1,6 +1,7 @@
 import {
 	Box,
 	Button,
+	Chip,
 	FormControl,
 	FormControlLabel,
 	FormLabel,
@@ -18,12 +19,10 @@ import moment from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { errorAlert } from 'store/alert';
+import { errorAlert, successAlert, warningAlert } from 'store/alert';
 import { DELETE, GET, PATCH, handleError } from 'utils/api-calls';
-import { isValidNum, isValidStr } from 'utils/helpers';
+import { isValidNum } from 'utils/helpers';
 import toast, { Toaster } from 'react-hot-toast';
-// import 'slick-carousel/slick/slick.css';
-// import 'slick-carousel/slick/slick-theme.css';
 import Carousel from 'react-material-ui-carousel';
 import NoImage from 'components/ListingCard/no-image.jpeg';
 import { useAppSelector } from 'hooks';
@@ -32,7 +31,8 @@ import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import PetsIcon from '@mui/icons-material/Pets';
 import { Delete, Edit } from '@mui/icons-material';
-import { Listing } from 'utils/types/listing';
+import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
+import UploadListingMedia from 'components/UploadListingMedia';
 
 const style = {
 	position: 'absolute',
@@ -46,7 +46,7 @@ const style = {
 	p: 4,
 };
 
-const ListingToBeShown: React.FC<{ listing: Listing }> = ({ listing }) => {
+function ListingToBeShown({ listing, isOwner, setCurrListing }) {
 	const {
 		apt,
 		bedrooms,
@@ -54,41 +54,70 @@ const ListingToBeShown: React.FC<{ listing: Listing }> = ({ listing }) => {
 		deposit,
 		description,
 		location,
-		// occupied,
+		occupied,
 		rent,
 		photos,
 		parking,
 		petPolicy,
 		squareFoot,
 	} = listing;
-	const listingPhotos = photos.filter((photo) => photo !== null) as string[];
+	const listingPhotos = photos?.filter((photo) => photo !== null);
 	const laundry = useMemo(() => {
 		if (listing.laundry === 'inunit') return 'In-Unit';
 		if (listing.laundry === 'shared') return 'Shared';
 		return 'Not Available';
 	}, [listing.laundry]);
+	const [showUpdateMediaForm, setShowUpdateMediaForm] = useState(false);
 	return (
 		<Box>
 			<Grid container spacing={4}>
 				<Grid item xs={12} sm={6}>
-					<Carousel height={400} animation="slide">
-						{listingPhotos.length > 0 ? (
-							listingPhotos.map((photo) => (
-								<img
-									src={photo}
-									alt={location.name}
-									style={{ height: '100%', objectFit: 'contain' }}
-									key={photo}
-								/>
-							))
-						) : (
-							<img
-								src={NoImage}
-								alt={location.name}
-								style={{ width: '100%', height: 'auto' }}
-							/>
-						)}
-					</Carousel>
+					{showUpdateMediaForm ? (
+						<UploadListingMedia
+							listingPhotos={photos}
+							listingId={listing._id}
+							handleUpdate={(updatedListing) => {
+								setCurrListing({ listing: updatedListing });
+							}}
+							close={() => {
+								setShowUpdateMediaForm(false);
+							}}
+						/>
+					) : (
+						<>
+							<Carousel height={400} animation="slide">
+								{listingPhotos.length > 0 ? (
+									listingPhotos.map((photo) => (
+										<img
+											src={photo}
+											alt={location.name}
+											style={{ height: '100%', objectFit: 'contain' }}
+											key={photo}
+										/>
+									))
+								) : (
+									<img
+										src={NoImage}
+										alt={location.name}
+										style={{ width: '100%', objectFit: 'contain' }}
+									/>
+								)}
+							</Carousel>
+							{isOwner && (
+								<Stack alignItems="center">
+									<Button
+										type="button"
+										size="small"
+										onClick={() => {
+											setShowUpdateMediaForm(true);
+										}}
+									>
+										Update Images
+									</Button>
+								</Stack>
+							)}
+						</>
+					)}
 				</Grid>
 				<Grid item xs={12} sm={6}>
 					<Typography gutterBottom variant="h4" component="p" sx={{ mt: 1 }}>
@@ -132,6 +161,7 @@ const ListingToBeShown: React.FC<{ listing: Listing }> = ({ listing }) => {
 							{petPolicy === 'allowed' ? 'Allowed' : 'Not Allowed'}
 						</Typography>
 					</Stack>
+					{occupied && <Chip sx={{ mt: 4 }} label="OFF MARKET" />}
 				</Grid>
 			</Grid>
 			<Typography
@@ -146,16 +176,25 @@ const ListingToBeShown: React.FC<{ listing: Listing }> = ({ listing }) => {
 			<Typography fontSize="1.1rem">
 				{description.trim() ? description.trim() : 'No Description'}
 			</Typography>
+			<Box sx={{ mt: 4 }}>
+				<GoogleMap
+					mapContainerStyle={{ height: '200px' }}
+					zoom={12}
+					center={{
+						lat: location.lat,
+						lng: location.lng,
+					}}
+				>
+					<Marker
+						position={{
+							lat: location.lat,
+							lng: location.lng,
+						}}
+					/>
+				</GoogleMap>
+			</Box>
 		</Box>
 	);
-};
-
-interface FormInterface {
-	description: string;
-	rent: string;
-	deposit: string;
-	availabilityDate: string | null;
-	occupied: string | boolean;
 }
 
 function SingleListing() {
@@ -167,54 +206,76 @@ function SingleListing() {
 	const handleClose = () => setOpen(false);
 	const handleDeleteModalOpen = () => setDeleteModal(true);
 	const { id } = useParams();
-	const [formValues, setFormValues] = useState<FormInterface>({
+	const [currListing, setCurrListing] = useState();
+	useEffect(() => {
+		async function getListing() {
+			const listing = await GET(`/listings/${id}`);
+			setCurrListing(listing);
+		}
+
+		getListing();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	const [formValues, setFormValues] = useState({
 		description: '',
 		rent: '',
 		deposit: '',
 		availabilityDate: null,
 		occupied: '',
 	});
-	interface CurrListingInterface {
-		listing: Listing;
-	}
-	const [currListing, setCurrListing] = useState<CurrListingInterface>();
+
+	useEffect(() => {
+		if (currListing?.listing) {
+			const { rent, description, deposit, occupied, availabilityDate } =
+				currListing.listing;
+			setFormValues({
+				rent,
+				description,
+				deposit,
+				occupied,
+				availabilityDate,
+			});
+		}
+	}, [currListing]);
+
 	const [isDisabled, setIsDisabled] = useState(false);
 	const user = useAppSelector((state) => state.user.value);
 
-	useEffect(() => {
-		async function getListing() {
-			const listing = await GET(`/listings/${id}`);
-			setCurrListing(listing);
-		}
-		getListing();
-	}, [id]);
-
-	const handleSubmit = async (event: React.SyntheticEvent) => {
+	const handleSubmit = async (event) => {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
-			const { description, rent, deposit } = formValues;
+			const { description, rent, deposit, occupied, availabilityDate } =
+				formValues;
+			if (!isValidNum(rent, 'min', 100))
+				throw new Error('Invalid Rent, should at least 100');
+			if (!isValidNum(deposit, 'min', 0)) throw new Error('Invalid Deposit');
 			if (
-				!isValidStr(description) &&
-				!isValidNum(Number(rent), 'min', 50) &&
-				!isValidNum(Number(deposit), 'min', 0)
+				rent === currListing.listing.rent &&
+				deposit === currListing.listing.deposit &&
+				description.trim() === currListing.listing.description &&
+				occupied === currListing.listing.occupied &&
+				availabilityDate === currListing.listing.availabilityDate
 			) {
+				dispatch(warningAlert('No fields updated'));
 				return;
 			}
 			const res = await PATCH(`/listings/${id}`, formValues);
-			if (res && res.listing._id) {
-				navigate(`/listings/${res.listing._id}`);
-			}
+			if (!res.listing) throw new Error();
+			setCurrListing({ listing: res.listing });
 			setOpen(false);
-			toast.success('Your Listing is successfully updated!');
+			dispatch(successAlert('Your Listing is successfully updated!'));
 		} catch (e) {
 			let error = 'Unexpected error occurred';
 			if (typeof handleError(e) === 'string') error = handleError(e);
 			dispatch(errorAlert(error));
+		} finally {
+			setIsDisabled(false);
 		}
 	};
 
-	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (event) => {
 		const { name, value } = event.target;
 		let { type } = event.target;
 		setIsDisabled(false);
@@ -236,8 +297,8 @@ function SingleListing() {
 		try {
 			setDeleteModal(true);
 			const res = await DELETE(`/listings/${id}`);
-			const delApplications = await DELETE(`/applications/${id}`);
-			if (res && res.listing.deleted === true && delApplications) {
+			if (!res?.listing?.deleted) throw new Error();
+			if (res && res.listing?.deleted === true) {
 				toast.success('Listing Deleted Successfully!');
 				setTimeout(() => {
 					navigate('/');
@@ -249,6 +310,10 @@ function SingleListing() {
 			dispatch(errorAlert(error));
 		}
 	};
+
+	// const handleBackdropClick = (event) => {
+	// 	event.stopPropagation();
+	// };
 
 	const isOwner =
 		user && currListing?.listing && currListing.listing.listedBy === user._id;
@@ -274,19 +339,30 @@ function SingleListing() {
 
 			<Modal
 				open={open}
-				onClose={handleSubmit}
+				onClose={() => {
+					setOpen(false);
+				}}
 				aria-labelledby="modal-modal-title"
 				aria-describedby="modal-modal-description"
+				// slotProps={{
+				// 	backdrop: {
+				// 		onClick: handleBackdropClick,
+				// 	},
+				// }}
 			>
 				<Box sx={style}>
 					<Typography id="modal-modal-title" variant="h6" component="h2">
 						Update Listing
 					</Typography>
 					<TextField
+						fullWidth
 						name="description"
 						label="Description"
 						value={formValues.description}
 						onChange={handleChange}
+						multiline
+						minRows={4}
+						sx={{ mb: 2 }}
 					/>
 					<TextField
 						type="number"
@@ -294,15 +370,20 @@ function SingleListing() {
 						label="Rent"
 						value={formValues.rent}
 						onChange={handleChange}
+						fullWidth
+						sx={{ mb: 2 }}
 					/>
+
 					<TextField
 						type="number"
 						name="deposit"
 						label="Deposit"
 						value={formValues.deposit}
 						onChange={handleChange}
+						fullWidth
+						sx={{ mb: 2 }}
 					/>
-					<FormControl fullWidth>
+					<FormControl fullWidth sx={{ mb: 2 }}>
 						<LocalizationProvider dateAdapter={AdapterMoment}>
 							<DatePicker
 								label="Availability Date"
@@ -312,8 +393,13 @@ function SingleListing() {
 										: null
 								}
 								format="MM-DD-YYYY"
-								minDate={moment()}
-								onChange={(newValue: moment.Moment | null) => {
+								minDate={
+									formValues.availabilityDate
+										? moment(formValues.availabilityDate)
+										: moment()
+								}
+								onChange={(newValue) => {
+									setIsDisabled(false);
 									setFormValues({
 										...formValues,
 										availabilityDate: newValue
@@ -330,6 +416,7 @@ function SingleListing() {
 						name="occupied"
 						value={formValues.occupied.toString()}
 						onChange={handleChange}
+						sx={{ mb: 2 }}
 					>
 						<FormControlLabel
 							value={true.toString()}
@@ -342,24 +429,26 @@ function SingleListing() {
 							label="Not Occupied"
 						/>
 					</RadioGroup>
-					<input type="file" name="image" onChange={handleChange} />
-					<Button
-						variant="contained"
-						color="primary"
-						type="submit"
-						disabled={isDisabled}
-						onClick={handleSubmit}
-					>
-						Submit
-					</Button>
-					<Button
-						variant="contained"
-						color="primary"
-						type="submit"
-						onClick={handleClose}
-					>
-						Close
-					</Button>
+					{/* <input type="file" name="image" onChange={handleChange} /> */}
+					<Stack direction="row" gap={2} justifyContent="flex-end">
+						<Button
+							variant="outlined"
+							color="primary"
+							type="submit"
+							onClick={handleClose}
+						>
+							Close
+						</Button>
+						<Button
+							variant="contained"
+							color="primary"
+							type="submit"
+							disabled={isDisabled}
+							onClick={handleSubmit}
+						>
+							Submit
+						</Button>
+					</Stack>
 				</Box>
 			</Modal>
 			<Modal open={deleteModal} onClose={() => setDeleteModal(false)}>
@@ -370,18 +459,31 @@ function SingleListing() {
 					<Typography id="modal-modal-description" sx={{ mt: 2 }}>
 						Do you really want to delete this listing?
 					</Typography>
-					<Button variant="contained" onClick={handleDelete}>
-						Yes
-					</Button>
-					<Button variant="contained" onClick={() => setDeleteModal(false)}>
-						No
-					</Button>
+					<Stack
+						direction="row"
+						gap={2}
+						sx={{ mt: 2 }}
+						justifyContent="flex-end"
+					>
+						<Button variant="outlined" onClick={() => setDeleteModal(false)}>
+							No
+						</Button>
+						<Button variant="contained" onClick={handleDelete} color="error">
+							Yes
+						</Button>
+					</Stack>
 				</Box>
 			</Modal>
 			<Box>
-				{currListing && <ListingToBeShown listing={currListing.listing} />}
+				{currListing && currListing.listing && (
+					<ListingToBeShown
+						listing={currListing.listing}
+						isOwner={isOwner}
+						setCurrListing={setCurrListing}
+					/>
+				)}
 			</Box>
-			{user?.role === 'tenant' && (
+			{user?.role === 'tenant' && currListing?.listing?.occupied === false && (
 				<Button
 					variant="contained"
 					sx={{ mt: 4 }}

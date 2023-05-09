@@ -14,7 +14,7 @@ import {
 	applicationStatus,
 	isValidCreateApplicationObj,
 } from '../../utils/applications';
-import { getListingById } from '../listings';
+import { checkListingOccupied, getListingById } from '../listings';
 import { upload } from '../../configs/awsS3';
 import { getUserById } from '../users';
 
@@ -77,9 +77,11 @@ export const createApplication = async (
 		listedBy,
 		apt,
 		location: { streetAddress },
+		occupied,
 	} = await getListingById(listingId);
 	if (await checkApplicationExists(validatedUser._id, listingId))
 		throw badRequestErr('You already have an application for this listing');
+	if (occupied) throw badRequestErr('Listing is off market');
 	const now = new Date();
 	let document = null;
 	const applicationId = new ObjectId();
@@ -209,13 +211,13 @@ export const approveApplication = async (
 
 	if (validatedUser.role !== 'lessor')
 		throw forbiddenErr(
-			'You cannot udpate this application if you have registered as a tenant'
+			'You cannot update this application if you have registered as a tenant'
 		);
 
 	const applicationCollection = await applications();
 
 	const application = await getApplicationById(applicationId, validatedUser);
-
+	await checkListingOccupied(application.listing._id.toString());
 	if (application.listing.listedBy.toString() !== validatedUser.id) {
 		unauthorizedErr('incorrect User accessing the application');
 	}
@@ -260,14 +262,11 @@ export const completeApplication = async (
 	documents
 ) => {
 	const validatedUser = isValidUserAuthObj(user);
-
 	if (validatedUser.role !== 'tenant')
 		throw forbiddenErr('You cannot update this information as Lessor');
-
 	const applicationCollection = await applications();
-
 	const application = await getApplicationById(applicationId, validatedUser);
-
+	await checkListingOccupied(application.listing._id.toString());
 	if (application.listing.listedBy.toString() !== validatedUser.id) {
 		unauthorizedErr('incorrect User accessing the application');
 	}
@@ -342,13 +341,4 @@ export const updatePaymentStatus = async (
 		validatedUser
 	);
 	return updatedApplication;
-};
-
-export const deleteApplications = async (listingId) => {
-	const id = isValidObjectId(listingId);
-	const applicationCollection = await applications();
-	const updatedAppCol = await applicationCollection.deleteMany({
-		'listing._id': new ObjectId(id),
-	});
-	return updatedAppCol;
 };
