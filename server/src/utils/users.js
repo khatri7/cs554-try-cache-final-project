@@ -79,7 +79,7 @@ const isValidPassword = (passwordParam) => {
  * @returns {string} role trimmed if it is valid otherwise throws an error
  */
 export const isValidUserRole = (roleParam) => {
-	const role = isValidStr(roleParam, 'role')?.toLowerCase();
+	const role = isValidStr(xss(roleParam), 'role')?.toLowerCase();
 	if (!USER_ROLES.includes(role)) throw badRequestErr('Invalid user role');
 	return role;
 };
@@ -91,7 +91,7 @@ export const isValidUserRole = (roleParam) => {
  * @returns {import('moment').Moment} moment date object is the date is valid
  */
 export const isValidDateStr = (dateParam, varName) => {
-	const date = isValidStr(dateParam, varName);
+	const date = isValidStr(xss(dateParam), varName);
 	date.split('').forEach((char) => {
 		if (!isNumberChar(char) && char !== '-')
 			throw badRequestErr(`Invalid ${varName}`);
@@ -123,7 +123,7 @@ export const isValidDateStr = (dateParam, varName) => {
  * @returns {string} date string if it is valid otherwise throws an error
  */
 const isValidDob = (dateParam) => {
-	const momentDate = isValidDateStr(dateParam, 'DOB');
+	const momentDate = isValidDateStr(xss(dateParam), 'DOB');
 	if (!momentDate.isValid()) throw badRequestErr('Invalid DOB');
 	const difference = moment().diff(momentDate, 'year');
 	if (difference < 18 || difference > 100)
@@ -139,7 +139,7 @@ const isValidDob = (dateParam) => {
  * @returns {string} name after trimming if it is a valid director name otherwise throws an error
  */
 const isValidName = (nameParam, varName, allowPunctuations = false) => {
-	const name = isValidStr(nameParam, varName, 'min', 3);
+	const name = isValidStr(xss(nameParam), xss(varName), 'min', 3);
 	isValidStr(name, varName, 'max', 40);
 	name
 		.toLowerCase()
@@ -199,12 +199,12 @@ export const isValidUserUpdateObj = (userUpdateObjParam) => {
 	const validatedObj = {};
 	if (userUpdateObjParam.firstName)
 		validatedObj.firstName = isValidName(
-			userUpdateObjParam.firstName,
+			xss(userUpdateObjParam.firstName),
 			'First Name'
 		);
 	if (userUpdateObjParam.lastName)
 		validatedObj.lastName = isValidName(
-			userUpdateObjParam.lastName,
+			xss(userUpdateObjParam.lastName),
 			'Last Name'
 		);
 	if (userUpdateObjParam.phone)

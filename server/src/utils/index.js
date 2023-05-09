@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
+import xss from 'xss';
 
 export const successStatusCodes = {
 	OK: 200,
@@ -87,7 +88,7 @@ export const isValidStr = (strParam, varName, compareOp, compareVal) => {
 	if (!strParam) throw badRequestErr(`You need to provide a ${varName}`);
 	if (typeof strParam !== 'string')
 		throw badRequestErr(`${varName} should be of type string`);
-	const str = strParam.trim();
+	const str = xss(strParam.trim());
 	if (str.length === 0)
 		throw badRequestErr(
 			`Empty string/string with spaces is not a valid ${varName}`
@@ -192,7 +193,7 @@ export const isValidObj = (obj) =>
  * @returns {string} the object id string if it is valid otherwise throws an error
  */
 export const isValidObjectId = (idParam, varName) => {
-	const id = isValidStr(idParam, varName || 'Id');
+	const id = isValidStr(xss(idParam), varName || 'Id');
 	if (!ObjectId.isValid(id)) {
 		if (varName) throw badRequestErr(`Invalid ${varName}`);
 		else throw badRequestErr('Invalid Object Id');
@@ -201,7 +202,7 @@ export const isValidObjectId = (idParam, varName) => {
 };
 
 export const isValidJwtString = (tokenParam) => {
-	const token = isValidStr(tokenParam, 'JWT');
+	const token = isValidStr(xss(tokenParam), 'JWT');
 	try {
 		return jwt.verify(token, process.env.JWT_SECRET);
 	} catch (e) {
@@ -214,19 +215,19 @@ export const createJwt = (data) => jwt.sign(data, process.env.JWT_SECRET);
 export const isValidLaundry = (data) => {
 	if (data !== 'inunit' && data !== 'shared' && data !== 'notavailable')
 		throw badRequestErr('Invalid laundry');
-	return data;
+	return xss(data);
 };
 
 export const isValidParking = (data) => {
 	if (data !== 'available' && data !== 'notavailable')
 		throw badRequestErr('Invalid Parking');
-	return data;
+	return xss(data);
 };
 
 export const isValidPetPolicy = (data) => {
 	if (data !== 'allowed' && data !== 'notAllowed')
 		throw badRequestErr('Invalid Pet Policy');
-	return data;
+	return xss(data);
 };
 
 export const compareArrays = (arr1, arr2) => {
