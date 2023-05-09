@@ -446,6 +446,5 @@ export const checkListingOccupied = async (idParam) => {
 		throw badRequestErr(
 			'Sorry, The listing is currently Occupied. Please try again later.'
 		);
-	console.log('here');
 	return false;
 };
