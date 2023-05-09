@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import image from './404A.gif';
 
-function ErrorPage() {
+const ErrorPage: React.FC<{}> = () => {
 	const navigate = useNavigate();
 	const handleNavigate = () => {
 		navigate('/');
@@ -39,6 +39,6 @@ function ErrorPage() {
 			</div>
 		</div>
 	);
-}
+};
 
 export default ErrorPage;

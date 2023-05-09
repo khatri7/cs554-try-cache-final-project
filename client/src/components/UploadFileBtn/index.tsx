@@ -5,7 +5,7 @@ import React, { ChangeEventHandler, useRef } from 'react';
 interface UploadFileBtnProps {
 	onChange: ChangeEventHandler<HTMLInputElement>;
 	value: File | null;
-	label: string;
+	label?: string;
 }
 
 const UploadFileBtn: React.FC<UploadFileBtnProps> = ({
