@@ -415,7 +415,7 @@ function SingleListing() {
 					<ListingToBeShown listing={currListing.listing} />
 				)}
 			</Box>
-			{user?.role === 'tenant' && (
+			{user?.role === 'tenant' && currListing?.listing?.occupied === false && (
 				<Button
 					variant="contained"
 					sx={{ mt: 4 }}
