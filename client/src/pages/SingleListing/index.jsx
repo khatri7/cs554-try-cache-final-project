@@ -182,9 +182,13 @@ function SingleListing() {
 			setIsDisabled(true);
 			event.preventDefault();
 			const { description, rent, deposit } = formValues;
-			isValidStr(description);
-			isValidNum(rent, 'min', 50);
-			isValidNum(deposit, 'min', 0);
+			if (
+				!isValidStr(description) &&
+				!isValidNum(rent, 'min', 50) &&
+				!isValidNum(deposit, 'min', 0)
+			) {
+				return;
+			}
 			const res = await PATCH(`/listings/${id}`, formValues);
 			if (res && res.listing._id) {
 				navigate(`/listings/${res.listing._id}`);
@@ -199,8 +203,10 @@ function SingleListing() {
 	};
 
 	const handleChange = (event) => {
-		const { name, value, type } = event.target;
+		const { name, value } = event.target;
+		let { type } = event.target;
 		setIsDisabled(false);
+		if (value === '') type = 'change';
 		if (name === 'occupied') {
 			setFormValues({
 				...formValues,
