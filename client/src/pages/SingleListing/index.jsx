@@ -415,18 +415,20 @@ function SingleListing() {
 					<ListingToBeShown listing={currListing.listing} />
 				)}
 			</Box>
-			{user?.role === 'tenant' && (
-				<Button
-					variant="contained"
-					sx={{ mt: 4 }}
-					size="large"
-					onClick={() => {
-						navigate(`/listings/${id}/application`);
-					}}
-				>
-					Apply
-				</Button>
-			)}
+			{user?.role === 'tenant' &&
+				currListing?.listing?.occupied ===
+					false(
+						<Button
+							variant="contained"
+							sx={{ mt: 4 }}
+							size="large"
+							onClick={() => {
+								navigate(`/listings/${id}/application`);
+							}}
+						>
+							Apply
+						</Button>
+					)}
 		</div>
 	);
 }
