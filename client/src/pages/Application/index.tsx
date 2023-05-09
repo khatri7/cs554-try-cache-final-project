@@ -10,22 +10,28 @@ import { TextInput } from 'components/FormikMuiFields';
 import { Field, Form, Formik } from 'formik';
 import React, { useRef } from 'react';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from 'hooks';
 import { errorAlert, successAlert } from 'store/alert';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createApplication, handleError } from 'utils/api-calls';
 
 const FIVE_MB = 1024 * 1024 * 5;
 
-function Application() {
-	const user = useSelector((state) => state.user.value);
-	const fileUploadRef = useRef();
+const Application: React.FC<{}> = () => {
+	const user = useAppSelector((state) => state.user.value);
+	const fileUploadRef = useRef<HTMLInputElement | null>(null);
 	const navigate = useNavigate();
 	const { id } = useParams();
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
-	const handleFileUpload = (e, onSuccess) => {
+	const handleFileUpload = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		onSuccess: Function
+	) => {
+		if (!e.target.files) {
+			return;
+		}
 		const document = e.target.files[0];
 		if (document) {
 			if (document.type !== 'application/pdf') {
@@ -40,17 +46,28 @@ function Application() {
 		}
 	};
 
+	interface MyFormValues {
+		firstName: string;
+		lastName: string;
+		email: string;
+		phone: string;
+		notes: string;
+		document: File | null;
+	}
+
+	const initialValues: MyFormValues = {
+		firstName: user?.firstName || '',
+		lastName: user?.lastName || '',
+		email: user?.email || '',
+		phone: user?.phone || '',
+		notes: '',
+		document: null,
+	};
+
 	return (
 		<Box>
 			<Formik
-				initialValues={{
-					firstName: user?.firstName || '',
-					lastName: user?.lastName || '',
-					email: user?.email || '',
-					phone: user?.phone || '',
-					notes: '',
-					document: null,
-				}}
+				initialValues={initialValues}
 				enableReinitialize
 				onSubmit={async ({ notes, document }, { setSubmitting }) => {
 					try {
@@ -159,7 +176,7 @@ function Application() {
 								hidden
 								accept="application/pdf"
 								onChange={(e) => {
-									handleFileUpload(e, (value) => {
+									handleFileUpload(e, (value: File) => {
 										setFieldValue('document', value);
 									});
 								}}
@@ -181,6 +198,6 @@ function Application() {
 			</Formik>
 		</Box>
 	);
-}
+};
 
 export default Application;

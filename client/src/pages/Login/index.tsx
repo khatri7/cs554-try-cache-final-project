@@ -40,7 +40,7 @@ function Login() {
 
 	const navigate = useNavigate();
 
-	const handleMouseDownPassword = (event) => {
+	const handleMouseDownPassword = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 	};
 	return (

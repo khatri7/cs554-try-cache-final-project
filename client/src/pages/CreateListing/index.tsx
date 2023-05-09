@@ -19,11 +19,40 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { errorAlert } from 'store/alert';
 import { useDispatch } from 'react-redux';
+import { Suggestion } from 'use-places-autocomplete';
 
 function CreateListing() {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const [formValues, setFormValues] = useState({
+
+	interface Formatted {
+		name: string | undefined;
+		placeId: string;
+		streetAddress: string | undefined;
+		url: string | undefined;
+		vicinity: string | undefined;
+		addressComponents: google.maps.GeocoderAddressComponent[] | undefined;
+		types: string[] | undefined;
+		lat: number;
+		lng: number;
+	}
+
+	interface FormInterface {
+		apt: string;
+		description: string;
+		bedrooms: string;
+		bathrooms: string;
+		squareFoot: string;
+		rent: string;
+		deposit: number;
+		petPolicy: string;
+		laundry: string;
+		parking: string;
+		availabilityDate: string | null;
+		location: Formatted | false;
+	}
+
+	const [formValues, setFormValues] = useState<FormInterface>({
 		apt: '',
 		description: '',
 		bedrooms: '',
@@ -35,21 +64,23 @@ function CreateListing() {
 		laundry: '',
 		parking: '',
 		availabilityDate: null,
-		location: null,
+		location: false,
 	});
 
 	const [isDisabled, setIsDisabled] = useState(false);
 
-	const handleChange = (event) => {
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setIsDisabled(false);
-		const { name, value, type } = event.target;
+		const { name, value } = event.target;
+		let { type } = event.target;
+		if (value === '') type = 'change';
 		setFormValues({
 			...formValues,
 			[name]: type === 'number' ? parseInt(value, 10) : value,
 		});
 	};
 
-	const handleSubmit = async (event) => {
+	const handleSubmit = async (event: React.SyntheticEvent) => {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
@@ -66,16 +97,22 @@ function CreateListing() {
 			if (!location) throw new Error('Street Address is required');
 			if (description.trim() && !isValidStr(description))
 				throw new Error('Invalid Description');
-			if (apt !== '' && !isValidNum(apt, 'min', 1))
+			if (apt !== '' && !isValidNum(Number(apt), 'min', 1))
 				throw new Error('Invalid Apartment');
-			if (!isValidNum(bedrooms, 'min', 0) || !isValidNum(bedrooms, 'max', 20))
+			if (
+				!isValidNum(Number(bedrooms), 'min', 0) ||
+				!isValidNum(Number(bedrooms), 'max', 20)
+			)
 				throw new Error('Invalid Bedrooms, should be between 0-20');
-			if (!isValidNum(bathrooms, 'min', 1) || !isValidNum(bathrooms, 'max', 20))
+			if (
+				!isValidNum(Number(bathrooms), 'min', 1) ||
+				!isValidNum(Number(bathrooms), 'max', 20)
+			)
 				throw new Error('Invalid Bathrooms, should be between 1-20');
-			if (!isValidNum(rent, 'min', 100))
+			if (!isValidNum(Number(rent), 'min', 100))
 				throw new Error('Invalid Rent, should at least 100');
 			if (!isValidNum(deposit, 'min', 0)) throw new Error('Invalid Deposit');
-			if (squareFoot !== '' && !isValidNum(squareFoot, 'min', 100))
+			if (squareFoot !== '' && !isValidNum(Number(squareFoot), 'min', 100))
 				throw new Error('Invalid area, should be at least 100 sq.ft');
 			const res = await POST('/listings', formValues);
 			if (res && res.listing._id) {
@@ -106,7 +143,7 @@ function CreateListing() {
 					<PlacesAutocomplete
 						name="location"
 						label="Street Address *"
-						onChange={async (location) => {
+						onChange={async (location: Suggestion) => {
 							const formattedLocation = await getLocationDetails(location);
 							formValues.location = formattedLocation;
 						}}
@@ -186,7 +223,7 @@ function CreateListing() {
 									}
 									format="MM-DD-YYYY"
 									minDate={moment()}
-									onChange={(newValue) => {
+									onChange={(newValue: moment.Moment | null) => {
 										setFormValues({
 											...formValues,
 											availabilityDate: newValue

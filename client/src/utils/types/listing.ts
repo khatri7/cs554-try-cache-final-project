@@ -2,7 +2,7 @@ export interface Listing {
 	_id: string;
 	listedBy: string;
 	apt: number | null;
-	squareFoot?: number;
+	squareFoot: number;
 	description: string;
 	bedrooms: number;
 	bathrooms: number;
@@ -12,6 +12,9 @@ export interface Listing {
 	location: Location;
 	occupied: boolean;
 	photos: Array<string | null>;
+	petPolicy: string;
+	laundry: string;
+	parking: string;
 }
 
 interface Location {
