@@ -435,3 +435,17 @@ export const getPopularLocalities = async () => {
 	);
 	return localities.filter((locality) => locality !== null);
 };
+
+export const checkListingOccupied = async (idParam) => {
+	const id = isValidObjectId(idParam);
+	const listingsCollection = await listings();
+	const listing = await listingsCollection.findOne({ _id: new ObjectId(id) });
+	if (!listing) throw notFoundErr('No listing found for the provided id');
+	const occupiedStatus = listing.occupied;
+	if (occupiedStatus)
+		throw badRequestErr(
+			'Sorry, The listing is currently Occupied. Please try again later.'
+		);
+	console.log('here');
+	return false;
+};

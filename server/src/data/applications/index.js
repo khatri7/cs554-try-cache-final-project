@@ -14,7 +14,7 @@ import {
 	applicationStatus,
 	isValidCreateApplicationObj,
 } from '../../utils/applications';
-import { getListingById } from '../listings';
+import { checkListingOccupied, getListingById } from '../listings';
 import { upload } from '../../configs/awsS3';
 import { getUserById } from '../users';
 
@@ -215,6 +215,7 @@ export const approveApplication = async (
 	const applicationCollection = await applications();
 
 	const application = await getApplicationById(applicationId, validatedUser);
+	await checkListingOccupied(application.listing._id.toString());
 
 	if (application.listing.listedBy.toString() !== validatedUser.id) {
 		unauthorizedErr('incorrect User accessing the application');

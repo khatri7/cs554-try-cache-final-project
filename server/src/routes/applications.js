@@ -28,6 +28,7 @@ import {
 import { getUserById } from '../data/users';
 import { createCheckoutSession, getCheckoutSession } from '../configs/stripe';
 import { uploadMedia, uploadMedias } from '../middlewares/uploadMedia';
+import { checkListingOccupied } from '../data/listings';
 
 const router = express.Router();
 
@@ -81,6 +82,7 @@ router.route('/:id/payment').post(
 			validatedUser._id
 		);
 		const application = await getApplicationById(applicationId, validatedUser);
+		await checkListingOccupied(application.listing._id.toString());
 		if (application.status !== applicationStatus.PAYMENT_PENDING)
 			throw badRequestErr('You cannot initiate a payment at current status');
 		const session = await createCheckoutSession(
@@ -161,6 +163,7 @@ router.route('/').post(
 				'You cannot create an Application if you have registered as a lessor'
 			);
 		const appliObj = isValidCreateApplicationObj(req.body);
+		await checkListingOccupied(appliObj.listingId.toString());
 		const application = await createApplication(
 			appliObj,
 			validatedUser,
@@ -233,6 +236,8 @@ router.route('/:id/tenant/complete').post(
 		const text = xss(req.body.text)
 			? isValidStr(req.body.text, 'parameter text')
 			: '';
+		const application = await getApplicationById(id, validatedUser);
+		await checkListingOccupied(application.listing._id.toString());
 		if (validatedUser.role !== 'tenant')
 			throw forbiddenErr('You cannot update this information as Lessor.');
 		await completeApplication(id, text, validatedUser, req.files.documents);
