@@ -17,7 +17,11 @@ import {
 import { isValidUserAuthObj } from '../../utils/users';
 import redis from '../../configs/redis';
 import { deleteObject, upload } from '../../configs/awsS3';
-import { getLocationDetails } from '../../configs/placesApi';
+import {
+	getLocality,
+	getLocationDetails,
+	getPlacesAutocompleteLocality,
+} from '../../configs/placesApi';
 // One day in seconds
 const ONE_DAY = 86400;
 
@@ -387,4 +391,24 @@ export const getAllListings = async (user) => {
 		.find({ listedBy: new ObjectId(user._id) })
 		.toArray();
 	return listingsArr;
+};
+
+export const getPopularLocalities = async () => {
+	const popularLocalityKeys = await redis.getTopTenPopularLocalities();
+	const localities = await Promise.all(
+		popularLocalityKeys.map(async (key) => {
+			let locality = await redis.read(key);
+			const placeId = key.replace('tc_locality_', '');
+			if (!locality) {
+				locality = await getLocality(placeId);
+			}
+			const localityName = locality.formattedAddress;
+			const autocompleteObj = await getPlacesAutocompleteLocality(
+				localityName,
+				placeId
+			);
+			return autocompleteObj;
+		})
+	);
+	return localities.filter((locality) => locality !== null);
 };
