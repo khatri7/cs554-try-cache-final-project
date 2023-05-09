@@ -8,6 +8,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import useQuery from 'hooks/useQuery';
 import { Listing } from 'utils/types/listing';
 import { Application } from 'utils/types/application';
+import NoImage from './no-image.jpeg';
 
 function Dashboard() {
 	const listingArray: any = useQuery('/listings/mylistings');
@@ -16,15 +17,32 @@ function Dashboard() {
 	const [errorListings, setErrorListings] = useState(false);
 	const [listings, setListings] = useState([]);
 	const [loadingApplications, setLoadingApplications] = useState(false);
+	const [imagesLoaded, setImagesLoaded] = useState(false);
 	const [errorApplications, setErrorApplications] = useState(false);
 	const [applications, setApplications] = useState([]);
 	const [value, setValue] = useState('1');
+	const [images, setImages] = useState<{ [key: string]: string }>({});
+
+	function addImages() {
+		if (listings) {
+			listings.forEach((data: Listing) => {
+				const listingImages = data.photos.filter(
+					(photo) => photo !== null
+				) as string[];
+				setImages((prev) => ({
+					...prev,
+					[data._id]: listingImages.length > 0 ? listingImages[0] : NoImage,
+				}));
+			});
+			setImagesLoaded(true);
+		}
+	}
 
 	useEffect(() => {
 		setLoadingListings(listingArray.loading);
 		setErrorListings(listingArray.error);
 		setListings(listingArray.data?.listings);
-	}, [listingArray]);
+	}, [listingArray, listings]);
 
 	useEffect(() => {
 		setLoadingApplications(applicationArray.loading);
@@ -36,6 +54,7 @@ function Dashboard() {
 		event: React.SyntheticEvent,
 		newValue: string
 	) => {
+		addImages();
 		setValue(newValue);
 	};
 
@@ -75,12 +94,13 @@ function Dashboard() {
 							have listed.
 						</Typography>
 					)}
-					{!loadingApplications && (
+					{!loadingApplications && imagesLoaded && (
 						<Stack>
 							{applications?.map((application: Application) => (
 								<ViewAllApplications
 									key={application._id}
 									application={application}
+									image={images[application.listing._id]}
 								/>
 							))}
 						</Stack>

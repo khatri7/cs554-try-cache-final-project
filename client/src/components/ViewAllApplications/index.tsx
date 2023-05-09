@@ -11,9 +11,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Application } from 'utils/types/application';
 
-const ViewAllApplications: React.FC<{ application: Application }> = ({
-	application,
-}) => {
+const ViewAllApplications: React.FC<{
+	application: Application;
+	image: string;
+}> = ({ application, image }) => {
 	const navigate = useNavigate();
 	return (
 		<Card>
@@ -21,7 +22,7 @@ const ViewAllApplications: React.FC<{ application: Application }> = ({
 				<CardMedia
 					component="img"
 					height="240"
-					image="https://photos.zillowstatic.com/fp/806096a814e9817775d93d0df3d03e55-p_e.jpg"
+					image={image}
 					alt={application.listing.streetAddress}
 					sx={{
 						width: '240px',
