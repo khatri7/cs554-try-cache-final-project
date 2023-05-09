@@ -179,7 +179,11 @@ function CreateListing() {
 							<LocalizationProvider dateAdapter={AdapterMoment}>
 								<DatePicker
 									label="Availability Date"
-									value={formValues.availabilityDate}
+									value={
+										formValues.availabilityDate
+											? moment(formValues.availabilityDate)
+											: null
+									}
 									format="MM-DD-YYYY"
 									minDate={moment()}
 									onChange={(newValue) => {

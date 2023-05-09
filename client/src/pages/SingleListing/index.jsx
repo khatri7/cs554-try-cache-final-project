@@ -19,12 +19,10 @@ import moment from 'moment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { errorAlert } from 'store/alert';
+import { errorAlert, successAlert, warningAlert } from 'store/alert';
 import { DELETE, GET, PATCH, handleError } from 'utils/api-calls';
-import { isValidNum, isValidStr } from 'utils/helpers';
+import { isValidNum } from 'utils/helpers';
 import toast, { Toaster } from 'react-hot-toast';
-// import 'slick-carousel/slick/slick.css';
-// import 'slick-carousel/slick/slick-theme.css';
 import Carousel from 'react-material-ui-carousel';
 import NoImage from 'components/ListingCard/no-image.jpeg';
 import { useAppSelector } from 'hooks';
@@ -178,6 +176,17 @@ function SingleListing() {
 	const handleClose = () => setOpen(false);
 	const handleDeleteModalOpen = () => setDeleteModal(true);
 	const { id } = useParams();
+	const [currListing, setCurrListing] = useState();
+	useEffect(() => {
+		async function getListing() {
+			const listing = await GET(`/listings/${id}`);
+			setCurrListing(listing);
+		}
+
+		getListing();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	const [formValues, setFormValues] = useState({
 		description: '',
 		rent: '',
@@ -185,40 +194,54 @@ function SingleListing() {
 		availabilityDate: null,
 		occupied: '',
 	});
-	const [currListing, setCurrListing] = useState();
-	const [isDisabled, setIsDisabled] = useState(false);
-	const user = useAppSelector((state) => state.user.value);
 
 	useEffect(() => {
-		async function getListing() {
-			const listing = await GET(`/listings/${id}`);
-			setCurrListing(listing);
+		if (currListing?.listing) {
+			const { rent, description, deposit, occupied, availabilityDate } =
+				currListing.listing;
+			setFormValues({
+				rent,
+				description,
+				deposit,
+				occupied,
+				availabilityDate,
+			});
 		}
-		getListing();
-	}, [id]);
+	}, [currListing]);
+
+	const [isDisabled, setIsDisabled] = useState(false);
+	const user = useAppSelector((state) => state.user.value);
 
 	const handleSubmit = async (event) => {
 		try {
 			setIsDisabled(true);
 			event.preventDefault();
-			const { description, rent, deposit } = formValues;
+			const { description, rent, deposit, occupied, availabilityDate } =
+				formValues;
+			if (!isValidNum(rent, 'min', 100))
+				throw new Error('Invalid Rent, should at least 100');
+			if (!isValidNum(deposit, 'min', 0)) throw new Error('Invalid Deposit');
 			if (
-				!isValidStr(description) &&
-				!isValidNum(rent, 'min', 50) &&
-				!isValidNum(deposit, 'min', 0)
+				rent === currListing.listing.rent &&
+				deposit === currListing.listing.deposit &&
+				description.trim() === currListing.listing.description &&
+				occupied === currListing.listing.occupied &&
+				availabilityDate === currListing.listing.availabilityDate
 			) {
+				dispatch(warningAlert('No fields updated'));
 				return;
 			}
 			const res = await PATCH(`/listings/${id}`, formValues);
-			if (res && res.listing._id) {
-				navigate(`/listings/${res.listing._id}`);
-			}
+			if (!res.listing) throw new Error();
+			setCurrListing({ listing: res.listing });
 			setOpen(false);
-			toast.success('Your Listing is successfully updated!');
+			dispatch(successAlert('Your Listing is successfully updated!'));
 		} catch (e) {
 			let error = 'Unexpected error occurred';
 			if (typeof handleError(e) === 'string') error = handleError(e);
 			dispatch(errorAlert(error));
+		} finally {
+			setIsDisabled(false);
 		}
 	};
 
@@ -258,6 +281,10 @@ function SingleListing() {
 		}
 	};
 
+	// const handleBackdropClick = (event) => {
+	// 	event.stopPropagation();
+	// };
+
 	const isOwner =
 		user && currListing?.listing && currListing.listing.listedBy === user._id;
 
@@ -282,19 +309,30 @@ function SingleListing() {
 
 			<Modal
 				open={open}
-				onClose={handleSubmit}
+				onClose={() => {
+					setOpen(false);
+				}}
 				aria-labelledby="modal-modal-title"
 				aria-describedby="modal-modal-description"
+				// slotProps={{
+				// 	backdrop: {
+				// 		onClick: handleBackdropClick,
+				// 	},
+				// }}
 			>
 				<Box sx={style}>
 					<Typography id="modal-modal-title" variant="h6" component="h2">
 						Update Listing
 					</Typography>
 					<TextField
+						fullWidth
 						name="description"
 						label="Description"
 						value={formValues.description}
 						onChange={handleChange}
+						multiline
+						minRows={4}
+						sx={{ mb: 2 }}
 					/>
 					<TextField
 						type="number"
@@ -302,22 +340,36 @@ function SingleListing() {
 						label="Rent"
 						value={formValues.rent}
 						onChange={handleChange}
+						fullWidth
+						sx={{ mb: 2 }}
 					/>
+
 					<TextField
 						type="number"
 						name="deposit"
 						label="Deposit"
 						value={formValues.deposit}
 						onChange={handleChange}
+						fullWidth
+						sx={{ mb: 2 }}
 					/>
-					<FormControl fullWidth>
+					<FormControl fullWidth sx={{ mb: 2 }}>
 						<LocalizationProvider dateAdapter={AdapterMoment}>
 							<DatePicker
 								label="Availability Date"
-								value={formValues.availabilityDate}
+								value={
+									formValues.availabilityDate
+										? moment(formValues.availabilityDate)
+										: null
+								}
 								format="MM-DD-YYYY"
-								minDate={moment()}
+								minDate={
+									formValues.availabilityDate
+										? moment(formValues.availabilityDate)
+										: moment()
+								}
 								onChange={(newValue) => {
+									setIsDisabled(false);
 									setFormValues({
 										...formValues,
 										availabilityDate: newValue
@@ -334,6 +386,7 @@ function SingleListing() {
 						name="occupied"
 						value={formValues.occupied.toString()}
 						onChange={handleChange}
+						sx={{ mb: 2 }}
 					>
 						<FormControlLabel
 							value={true.toString()}
@@ -346,24 +399,26 @@ function SingleListing() {
 							label="Not Occupied"
 						/>
 					</RadioGroup>
-					<input type="file" name="image" onChange={handleChange} />
-					<Button
-						variant="contained"
-						color="primary"
-						type="submit"
-						disabled={isDisabled}
-						onClick={handleSubmit}
-					>
-						Submit
-					</Button>
-					<Button
-						variant="contained"
-						color="primary"
-						type="submit"
-						onClick={handleClose}
-					>
-						Close
-					</Button>
+					{/* <input type="file" name="image" onChange={handleChange} /> */}
+					<Stack direction="row" gap={2} justifyContent="flex-end">
+						<Button
+							variant="outlined"
+							color="primary"
+							type="submit"
+							onClick={handleClose}
+						>
+							Close
+						</Button>
+						<Button
+							variant="contained"
+							color="primary"
+							type="submit"
+							disabled={isDisabled}
+							onClick={handleSubmit}
+						>
+							Submit
+						</Button>
+					</Stack>
 				</Box>
 			</Modal>
 			<Modal open={deleteModal} onClose={() => setDeleteModal(false)}>
@@ -374,12 +429,19 @@ function SingleListing() {
 					<Typography id="modal-modal-description" sx={{ mt: 2 }}>
 						Do you really want to delete this listing?
 					</Typography>
-					<Button variant="contained" onClick={handleDelete}>
-						Yes
-					</Button>
-					<Button variant="contained" onClick={() => setDeleteModal(false)}>
-						No
-					</Button>
+					<Stack
+						direction="row"
+						gap={2}
+						sx={{ mt: 2 }}
+						justifyContent="flex-end"
+					>
+						<Button variant="outlined" onClick={() => setDeleteModal(false)}>
+							No
+						</Button>
+						<Button variant="contained" onClick={handleDelete} color="error">
+							Yes
+						</Button>
+					</Stack>
 				</Box>
 			</Modal>
 			<Box>
