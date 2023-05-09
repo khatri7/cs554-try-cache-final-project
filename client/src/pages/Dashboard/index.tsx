@@ -76,7 +76,7 @@ function Dashboard() {
 						</Typography>
 					)}
 					{!loadingListings && (
-						<Stack>
+						<Stack gap={4}>
 							{listings?.map((listing: Listing) => (
 								<ListingCard key={listing._id} listing={listing} />
 							))}
@@ -95,7 +95,7 @@ function Dashboard() {
 						</Typography>
 					)}
 					{!loadingApplications && imagesLoaded && (
-						<Stack>
+						<Stack gap={4}>
 							{applications?.map((application: Application) => (
 								<ViewAllApplications
 									key={application._id}

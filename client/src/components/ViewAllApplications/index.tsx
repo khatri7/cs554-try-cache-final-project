@@ -21,11 +21,11 @@ const ViewAllApplications: React.FC<{
 			<Stack direction="row">
 				<CardMedia
 					component="img"
-					height="240"
 					image={image}
 					alt={application.listing.streetAddress}
 					sx={{
 						width: '240px',
+						objectFit: 'cover',
 					}}
 				/>
 				<Box>
