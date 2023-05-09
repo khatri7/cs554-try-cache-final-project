@@ -1,11 +1,23 @@
 import redis from 'redis';
 
-const client = redis.createClient();
+/* use this for local redis server */
+// const client = redis.createClient();
+
+/* use this for redis cloud */
+const client = redis.createClient({
+	password: process.env.REDIS_CLOUD_PASSWORD,
+	socket: {
+		host: process.env.REDIS_CLOUD_HOST,
+		port: process.env.REDIS_CLOUD_PORT,
+	},
+});
+
 let isReady = false;
 
 client.connect().then(() => {
 	isReady = true;
 });
+
 client.on('error', (err) => {
 	console.log('Redis Client Error', err);
 	isReady = false;
@@ -27,7 +39,7 @@ const read = async (key) => {
 		if (!exists) return null;
 		let value = await client.get(key);
 		try {
-			value = JSON.parse(value);
+			if (value !== null) value = JSON.parse(value);
 		} catch {
 			/* empty */
 		}

@@ -20,6 +20,7 @@ import {
 	uploadImageListingImage,
 	deleteUploadImageListingImage,
 	getListingById,
+	getPopularLocalities,
 } from '../data/listings';
 import {
 	isValidCreateListingObj,
@@ -73,6 +74,13 @@ router.route('/mylistings').get(
 			);
 		const listings = await getAllListings(validatedUser);
 		res.json({ listings });
+	})
+);
+
+router.route('/popular-localities').get(
+	reqHandlerWrapper(async (req, res) => {
+		const localities = await getPopularLocalities();
+		res.json({ localities });
 	})
 );
 

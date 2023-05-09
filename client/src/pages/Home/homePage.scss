@@ -7,9 +7,9 @@
 		position: relative;
 		background-color: #000000;
 		background-image: url('./bg.jpg');
-		background-size: 100%;
+		background-size: cover;
 		background-repeat: no-repeat;
-		margin-left: calc(((100vw - 1152px) / 2) * -1);
+		left: calc((100vw - 1200px) / 2 * -1 - 24px);
 		margin-top: -32px;
 		width: 100vw;
 		height: 40vh;
@@ -20,6 +20,10 @@
 		align-items: center;
 		justify-content: center;
 		gap: 2rem;
+
+		@media screen and (max-width: 1200px) {
+			left: -24px;
+		}
 
 		&--overlay {
 			position: absolute;
@@ -84,5 +88,9 @@
 			background-color: #faf9f6;
 			gap: 1rem;
 		}
+	}
+
+	&__popular-localities {
+		margin-top: 2rem;
 	}
 }
