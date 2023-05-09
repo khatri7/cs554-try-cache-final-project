@@ -1,6 +1,7 @@
 import {
 	Box,
 	Button,
+	Chip,
 	FormControl,
 	FormControlLabel,
 	FormLabel,
@@ -32,6 +33,7 @@ import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import PetsIcon from '@mui/icons-material/Pets';
 import { Delete, Edit } from '@mui/icons-material';
+import { GoogleMap, MarkerF as Marker } from '@react-google-maps/api';
 
 const style = {
 	position: 'absolute',
@@ -53,7 +55,7 @@ function ListingToBeShown({ listing }) {
 		deposit,
 		description,
 		location,
-		// occupied,
+		occupied,
 		rent,
 		photos,
 		parking,
@@ -84,7 +86,7 @@ function ListingToBeShown({ listing }) {
 							<img
 								src={NoImage}
 								alt={location.name}
-								style={{ width: '100%', height: 'auto' }}
+								style={{ width: '100%', objectFit: 'contain' }}
 							/>
 						)}
 					</Carousel>
@@ -131,6 +133,7 @@ function ListingToBeShown({ listing }) {
 							{petPolicy === 'allowed' ? 'Allowed' : 'Not Allowed'}
 						</Typography>
 					</Stack>
+					{occupied && <Chip sx={{ mt: 4 }} label="OFF MARKET" />}
 				</Grid>
 			</Grid>
 			<Typography
@@ -145,6 +148,23 @@ function ListingToBeShown({ listing }) {
 			<Typography fontSize="1.1rem">
 				{description.trim() ? description.trim() : 'No Description'}
 			</Typography>
+			<Box sx={{ mt: 4 }}>
+				<GoogleMap
+					mapContainerStyle={{ height: '200px' }}
+					zoom={12}
+					center={{
+						lat: location.lat,
+						lng: location.lng,
+					}}
+				>
+					<Marker
+						position={{
+							lat: location.lat,
+							lng: location.lng,
+						}}
+					/>
+				</GoogleMap>
+			</Box>
 		</Box>
 	);
 }
@@ -363,9 +383,11 @@ function SingleListing() {
 				</Box>
 			</Modal>
 			<Box>
-				{currListing && <ListingToBeShown listing={currListing.listing} />}
+				{currListing && currListing.listing && (
+					<ListingToBeShown listing={currListing.listing} />
+				)}
 			</Box>
-			{user?.role === 'tenant' && (
+			{user?.role === 'tenant' && currListing?.listing?.occupied === false && (
 				<Button
 					variant="contained"
 					sx={{ mt: 4 }}
