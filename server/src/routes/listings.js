@@ -20,6 +20,7 @@ import {
 	uploadImageListingImage,
 	deleteUploadImageListingImage,
 	getListingById,
+	getPopularLocalities,
 } from '../data/listings';
 import {
 	isValidCreateListingObj,
@@ -48,22 +49,17 @@ router
 	)
 	.get(
 		reqHandlerWrapper(async (req, res) => {
-			try {
-				const { north, east, south, west, placeId, formattedAddress } =
-					req.query;
-				const searchArea = isValidSearchAreaQuery({
-					north,
-					east,
-					south,
-					west,
-					placeId,
-					formattedAddress,
-				});
-				const listings = await getListings(searchArea);
-				res.json({ listings });
-			} catch (e) {
-				console.log(e);
-			}
+			const { north, east, south, west, placeId, formattedAddress } = req.query;
+			const searchArea = isValidSearchAreaQuery({
+				north,
+				east,
+				south,
+				west,
+				placeId,
+				formattedAddress,
+			});
+			const listings = await getListings(searchArea);
+			res.json({ listings });
 		})
 	);
 
@@ -81,14 +77,18 @@ router.route('/mylistings').get(
 	})
 );
 
+router.route('/popular-localities').get(
+	reqHandlerWrapper(async (req, res) => {
+		const localities = await getPopularLocalities();
+		res.json({ localities });
+	})
+);
+
 router
 	.route('/:id')
 	.get(
-		authenticateToken,
 		reqHandlerWrapper(async (req, res) => {
-			const { user } = req;
 			const listingId = req.params.id;
-			isValidUserAuthObj(user);
 			const listing = await getListingById(listingId);
 			res.status(successStatusCodes.OK).json({ listing });
 		})
@@ -123,58 +123,63 @@ router
 		})
 	);
 
-router.route('/:id/image').post(
-	authenticateToken,
-	uploadMedia('image'),
-	reqHandlerWrapper(async (req, res) => {
-		// update listing by referencing the ID of the Property and the User ID
-		let { id } = req.params;
-		const pos = isValidStr(xss(req.body.position), 'position');
-		id = isValidObjectId(id, 'id');
-		if (
-			!isNumberChar(pos) ||
-			Number.parseInt(pos, 10) < 1 ||
-			Number.parseInt(pos, 10) > 5
-		)
-			throw badRequestErr('Position value should be between 1-5');
-		const { user } = req;
-		const validatedUser = isValidUserAuthObj(user);
-		if (validatedUser.role !== 'lessor')
-			throw forbiddenErr(
-				'You cannot update an Application if are logged in as Tenant'
+router
+	.route('/:id/image')
+	.post(
+		authenticateToken,
+		uploadMedia('image'),
+		reqHandlerWrapper(async (req, res) => {
+			// update listing by referencing the ID of the Property and the User ID
+			let { id } = req.params;
+			const pos = isValidStr(xss(req.body.position), 'position');
+			id = isValidObjectId(id, 'id');
+			if (
+				!isNumberChar(pos) ||
+				Number.parseInt(pos, 10) < 1 ||
+				Number.parseInt(pos, 10) > 5
+			)
+				throw badRequestErr('Position value should be between 1-5');
+			const { user } = req;
+			const validatedUser = isValidUserAuthObj(user);
+			if (validatedUser.role !== 'lessor')
+				throw forbiddenErr(
+					'You cannot update an Application if are logged in as Tenant'
+				);
+			const listing = await uploadImageListingImage(
+				id,
+				pos,
+				validatedUser,
+				req.file
 			);
-		const listing = await uploadImageListingImage(
-			id,
-			pos,
-			validatedUser,
-			req.file
-		);
-		res.status(successStatusCodes.CREATED).json({ listing });
-	})
-);
-
-router.route('/:id/image').delete(
-	authenticateToken,
-	reqHandlerWrapper(async (req, res) => {
-		let { id } = req.params;
-		const pos = isValidStr(xss(req.body.position), 'position');
-		if (
-			!isNumberChar(pos) ||
-			Number.parseInt(pos, 10) < 1 ||
-			Number.parseInt(pos, 10) > 5
-		)
-			throw badRequestErr('Position value should be between 1-5');
-		id = isValidObjectId(id, 'id');
-		const { user } = req;
-		const validatedUser = isValidUserAuthObj(user);
-		if (validatedUser.role !== 'lessor')
-			throw forbiddenErr(
-				'You cannot update an Application if are logged in as Tenant'
+			res.status(successStatusCodes.CREATED).json({ listing });
+		})
+	)
+	.delete(
+		authenticateToken,
+		reqHandlerWrapper(async (req, res) => {
+			let { id } = req.params;
+			const pos = isValidStr(xss(req.body.position), 'position');
+			if (
+				!isNumberChar(pos) ||
+				Number.parseInt(pos, 10) < 1 ||
+				Number.parseInt(pos, 10) > 5
+			)
+				throw badRequestErr('Position value should be between 1-5');
+			id = isValidObjectId(id, 'id');
+			const { user } = req;
+			const validatedUser = isValidUserAuthObj(user);
+			if (validatedUser.role !== 'lessor')
+				throw forbiddenErr(
+					'You cannot update an Application if are logged in as Tenant'
+				);
+			const listing = await deleteUploadImageListingImage(
+				id,
+				pos,
+				validatedUser
 			);
-		const listing = await deleteUploadImageListingImage(id, pos, validatedUser);
 
-		res.json({ listing });
-	})
-);
+			res.json({ listing });
+		})
+	);
 
 export default router;

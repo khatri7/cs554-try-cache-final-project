@@ -120,12 +120,11 @@ function LessorApplicationView({
 					<Formik
 						initialValues={{
 							text: '',
-							lease: null,
+							terms: null,
 						}}
 						onSubmit={async (values, { setSubmitting }) => {
 							try {
 								setSubmitting(true);
-								if (!values.lease) throw new Error('Lease is required');
 								const response = await approveApplication(
 									application._id,
 									values
@@ -171,15 +170,14 @@ function LessorApplicationView({
 													fileUploadRef.current.click();
 											}}
 										>
-											Upload Lease
+											Upload Terms and Conditions
 										</Button>
 										<Typography fontStyle="italic">
-											{values.lease
-												? `Selected File: ${values.lease.name}`
+											{values.terms
+												? `Selected File: ${values.terms.name}`
 												: 'No File Selected'}
 										</Typography>
 									</Stack>
-									<FormHelperText sx={{ mt: -2 }}>* required</FormHelperText>
 									<input
 										ref={fileUploadRef}
 										type="file"
@@ -188,7 +186,7 @@ function LessorApplicationView({
 										accept="application/pdf"
 										onChange={(e) => {
 											handleFileUpload(e, (value) => {
-												setFieldValue('lease', value);
+												setFieldValue('terms', value);
 											});
 										}}
 									/>
@@ -208,7 +206,7 @@ function LessorApplicationView({
 										<Button
 											variant="contained"
 											type="submit"
-											disabled={isSubmitting || !values.lease}
+											disabled={isSubmitting}
 										>
 											Approve Application
 										</Button>

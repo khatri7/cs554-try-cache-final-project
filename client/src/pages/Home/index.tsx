@@ -1,11 +1,12 @@
 import React from 'react';
 import './homePage.scss';
 import PlacesAutocomplete from 'components/PlacesAutocomplete';
-import { Card, CardContent, Typography } from '@mui/material';
+import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import { Suggestion } from 'use-places-autocomplete';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'hooks';
 import { errorAlert } from 'store/alert';
+import useQuery from 'hooks/useQuery';
 
 const Home: React.FC<{}> = () => {
 	const navigate = useNavigate();
@@ -17,6 +18,9 @@ const Home: React.FC<{}> = () => {
 	};
 	const dispatch = useAppDispatch();
 	const role = useAppSelector((state) => state.user.value?.role);
+	const { data: popularLocalities } = useQuery<{ localities: Suggestion[] }>(
+		'/listings/popular-localities'
+	);
 	const handleCreateListing = () => {
 		if (role !== 'lessor') {
 			dispatch(
@@ -44,7 +48,11 @@ const Home: React.FC<{}> = () => {
 		<div className="homepage">
 			<div className="homepage__search-container">
 				<div className="homepage__search-container--overlay" />
-				<Typography variant="h4" className="homepage__search-container__text">
+				<Typography
+					variant="h4"
+					component="p"
+					className="homepage__search-container__text"
+				>
 					Find Your Perfect Home
 				</Typography>
 				<div className="homepage__search-container__search-bar">
@@ -107,6 +115,26 @@ const Home: React.FC<{}> = () => {
 					</Card>
 				)}
 			</div>
+			{popularLocalities?.localities &&
+				popularLocalities.localities?.length > 0 && (
+					<div className="homepage__popular-localities">
+						<Typography variant="h5" component="p" gutterBottom>
+							Popular Localities
+						</Typography>
+						<Stack gap={1} alignItems="flex-start">
+							{popularLocalities.localities.map((locality) => (
+								<Button
+									key={locality.place_id}
+									onClick={() => {
+										handleSearch(locality);
+									}}
+								>
+									{locality.description}
+								</Button>
+							))}
+						</Stack>
+					</div>
+				)}
 		</div>
 	);
 };

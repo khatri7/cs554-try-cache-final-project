@@ -3,10 +3,10 @@ import { User } from '.';
 export interface Application {
 	_id: string;
 	listing: Listing;
-	lease: string;
+	terms: string | null;
 	createdAt: Date;
 	updatedAt: number;
-	status: string;
+	status: 'REVIEW' | 'DECLINED' | 'APPROVED' | 'PAYMENT_PENDING' | 'COMPLETED';
 	tenant: User;
 	notes: Notes;
 	paymentSessionId: string;

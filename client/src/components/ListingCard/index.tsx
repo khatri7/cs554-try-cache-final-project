@@ -10,8 +10,9 @@ import {
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Listing } from 'utils/types/listing';
+import NoImage from './no-image.jpeg';
 
-const formatter = new Intl.NumberFormat('en-US', {
+export const formatter = new Intl.NumberFormat('en-US', {
 	style: 'currency',
 	currency: 'USD',
 	maximumFractionDigits: 0,
@@ -19,13 +20,17 @@ const formatter = new Intl.NumberFormat('en-US', {
 
 const ListingCard: React.FC<{ listing: Listing }> = ({ listing }) => {
 	const navigate = useNavigate();
+	const listingImages = listing.photos.filter(
+		(photo) => photo !== null
+	) as string[];
+	const imageSrc = listingImages.length > 0 ? listingImages[0] : NoImage;
 	return (
 		<Card raised>
 			<Stack direction="row">
 				<CardMedia
 					component="img"
 					height="240"
-					image="https://photos.zillowstatic.com/fp/806096a814e9817775d93d0df3d03e55-p_e.jpg"
+					image={imageSrc}
 					alt={listing.location?.name}
 					sx={{
 						width: '240px',
@@ -44,9 +49,12 @@ const ListingCard: React.FC<{ listing: Listing }> = ({ listing }) => {
 							<span style={{ fontWeight: 'bold' }}>{listing.bedrooms}</span> bd
 							| <span style={{ fontWeight: 'bold' }}>{listing.bathrooms}</span>{' '}
 							ba
-							{listing.area && (
+							{listing.squareFoot && (
 								<>
-									| <span style={{ fontWeight: 'bold' }}>{listing.area}</span>{' '}
+									|{' '}
+									<span style={{ fontWeight: 'bold' }}>
+										{listing.squareFoot}
+									</span>{' '}
 									sqft
 								</>
 							)}

@@ -6,10 +6,12 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import useQuery from 'hooks/useQuery';
+import { Listing } from 'utils/types/listing';
+import { Application } from 'utils/types/application';
 
 function Dashboard() {
-	const listingArray = useQuery('/listings/mylistings');
-	const applicationArray = useQuery('/applications/my-applications');
+	const listingArray: any = useQuery('/listings/mylistings');
+	const applicationArray: any = useQuery('/applications/my-applications');
 	const [loadingListings, setLoadingListings] = useState(false);
 	const [errorListings, setErrorListings] = useState(false);
 	const [listings, setListings] = useState([]);
@@ -30,7 +32,10 @@ function Dashboard() {
 		setApplications(applicationArray.data?.applications);
 	}, [applicationArray]);
 
-	const handleChange = async (event, newValue) => {
+	const handleChange = async (
+		event: React.SyntheticEvent,
+		newValue: string
+	) => {
 		setValue(newValue);
 	};
 
@@ -53,7 +58,7 @@ function Dashboard() {
 					)}
 					{!loadingListings && (
 						<Stack>
-							{listings?.map((listing) => (
+							{listings?.map((listing: Listing) => (
 								<ListingCard key={listing._id} listing={listing} />
 							))}
 						</Stack>
@@ -72,7 +77,7 @@ function Dashboard() {
 					)}
 					{!loadingApplications && (
 						<Stack>
-							{applications?.map((application) => (
+							{applications?.map((application: Application) => (
 								<ViewAllApplications
 									key={application._id}
 									application={application}

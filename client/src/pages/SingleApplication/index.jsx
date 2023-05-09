@@ -135,8 +135,8 @@ function SingleApplication() {
 				)}
 				{role === 'tenant' && application.status === 'APPROVED' && (
 					<FormHelperText>
-						Your application has been approved. Find the lease below and any
-						other comments left by the lessor.
+						Your application has been approved. Find T&C below if included and
+						any other comments left by the lessor.
 					</FormHelperText>
 				)}
 				{role === 'tenant' && application.status === 'PAYMENT_PENDING' && (
@@ -167,19 +167,23 @@ function SingleApplication() {
 						>
 							{data.application.notes?.APPROVED?.text || 'No Comment'}
 						</Typography>
-						<Typography variant="h6" fontWeight="normal" sx={{ mt: 2 }}>
-							Lease:
-						</Typography>
-						<Button
-							href={data.application.lease}
-							variant="outlined"
-							target="_blank"
-							rel="noreferrer"
-							endIcon={<Download />}
-							sx={{ mb: 2 }}
-						>
-							Download
-						</Button>
+						{data.application.terms && (
+							<>
+								<Typography variant="h6" fontWeight="normal" sx={{ mt: 2 }}>
+									Terms and Conditions:
+								</Typography>
+								<Button
+									href={data.application.terms}
+									variant="outlined"
+									target="_blank"
+									rel="noreferrer"
+									endIcon={<Download />}
+									sx={{ mb: 2 }}
+								>
+									Download
+								</Button>
+							</>
+						)}
 					</Box>
 					<Divider />
 					<Box sx={{ my: 4 }}>
@@ -190,7 +194,6 @@ function SingleApplication() {
 							initialValues={{
 								text: '',
 								documents: [],
-								lease: null,
 							}}
 							onSubmit={async (values, { setSubmitting }) => {
 								try {
@@ -253,13 +256,9 @@ function SingleApplication() {
 												<UploadFileBtn
 													value={document}
 													onChange={(e) => {
-														handleFileUpload(
-															e,
-															(value) => {
-																setFieldValue(`documents[${index}]`, value);
-															},
-															values.lease
-														);
+														handleFileUpload(e, (value) => {
+															setFieldValue(`documents[${index}]`, value);
+														});
 													}}
 												/>
 											</Stack>
@@ -279,7 +278,7 @@ function SingleApplication() {
 												Add Document
 											</Button>
 										)}
-										<FormLabel sx={{ mb: -2 }}>Signed Lease</FormLabel>
+										{/* <FormLabel sx={{ mb: -2 }}>Signed Lease</FormLabel>
 										<UploadFileBtn
 											value={values.lease}
 											label="Upload Lease"
@@ -289,12 +288,12 @@ function SingleApplication() {
 												});
 											}}
 										/>
-										<FormHelperText sx={{ mt: -4 }}>*required</FormHelperText>
+										<FormHelperText sx={{ mt: -4 }}>*required</FormHelperText> */}
 										<Button
 											variant="contained"
 											sx={{ alignSelf: 'flex-end' }}
 											type="submit"
-											disabled={isSubmitting || !values.lease}
+											disabled={isSubmitting}
 										>
 											Complete Application and Make Payment
 										</Button>
@@ -322,19 +321,23 @@ function SingleApplication() {
 						>
 							{data.application.notes?.APPROVED?.text || 'No Comment'}
 						</Typography>
-						<Typography variant="h6" fontWeight="normal" sx={{ mt: 2 }}>
-							Lease:
-						</Typography>
-						<Button
-							href={data.application.lease}
-							variant="outlined"
-							target="_blank"
-							rel="noreferrer"
-							endIcon={<Download />}
-							sx={{ mb: 2 }}
-						>
-							Download
-						</Button>
+						{data.application.terms && (
+							<>
+								<Typography variant="h6" fontWeight="normal" sx={{ mt: 2 }}>
+									Terms and Conditions:
+								</Typography>
+								<Button
+									href={data.application.terms}
+									variant="outlined"
+									target="_blank"
+									rel="noreferrer"
+									endIcon={<Download />}
+									sx={{ mb: 2 }}
+								>
+									Download
+								</Button>
+							</>
+						)}
 					</Box>
 					<Divider />
 					<Box sx={{ my: 4 }}>
@@ -349,13 +352,13 @@ function SingleApplication() {
 					</Box>
 				</>
 			)}
-			{application.status === 'COMPLETED' && (
+			{application.status === 'COMPLETED' && application.terms && (
 				<Box>
 					<Card sx={{ width: 200 }} raised>
 						<Box sx={{ mb: 0.5, pt: 2 }}>
 							<img
 								src={Document}
-								alt="Lease"
+								alt="Terms And Conditions"
 								style={{
 									width: '100%',
 								}}
@@ -368,12 +371,12 @@ function SingleApplication() {
 								alignItems="center"
 							>
 								<Typography variant="h6" component="p">
-									Lease
+									Terms and Conditions
 								</Typography>
 								<Tooltip title="View">
 									<IconButton
 										onClick={() => {
-											window.open(application.notes.COMPLETED.lease, {
+											window.open(application.terms, {
 												target: '__blank',
 											});
 										}}

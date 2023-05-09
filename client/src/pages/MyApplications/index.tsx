@@ -14,10 +14,13 @@ import useQuery from 'hooks/useQuery';
 import moment from 'moment';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Application } from 'utils/types/application';
 
 const tableHeaders = ['Listing', 'Applied', 'Last Updated', 'Status', ''];
 
-export const chipColor = {
+type Color = 'warning' | 'error' | 'success';
+
+export const chipColor: { [key in Application['status']]: Color } = {
 	REVIEW: 'warning',
 	DECLINED: 'error',
 	APPROVED: 'success',
@@ -58,7 +61,7 @@ function MyApplications() {
 					</TableRow>
 				</TableHead>
 				<TableBody>
-					{(data.applications || []).map((application) => (
+					{(data.applications || []).map((application: Application) => (
 						<TableRow key={application._id}>
 							<TableCell>
 								<Typography>{application.listing?.streetAddress}</Typography>
@@ -77,9 +80,7 @@ function MyApplications() {
 									label={application.status}
 									color={chipColor[application.status] || 'primary'}
 									variant={
-										application.status === 'COMPLETED'
-											? 'contained'
-											: 'outlined'
+										application.status === 'COMPLETED' ? 'filled' : 'outlined'
 									}
 								/>
 							</TableCell>
