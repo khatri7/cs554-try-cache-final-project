@@ -38,7 +38,10 @@ const ListingCard: React.FC<{ listing: Listing }> = ({ listing }) => {
 				/>
 				<Box>
 					<CardContent>
-						<Typography gutterBottom variant="h5">
+						<Typography
+							gutterBottom
+							style={{ fontSize: 20, fontWeight: 'bold' as 'bold' }}
+						>
 							{formatter.format(listing.rent)}/mo
 						</Typography>
 						{listing.apt && <Typography>Apt {listing.apt}</Typography>}

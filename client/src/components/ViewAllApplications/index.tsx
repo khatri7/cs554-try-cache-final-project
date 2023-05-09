@@ -29,7 +29,10 @@ const ViewAllApplications: React.FC<{ application: Application }> = ({
 				/>
 				<Box>
 					<CardContent>
-						<Typography gutterBottom variant="h5">
+						<Typography
+							gutterBottom
+							style={{ fontSize: 20, fontWeight: 'bold' as 'bold' }}
+						>
 							Applicant Name: {application.tenant.firstName}{' '}
 							{application.tenant.lastName}
 						</Typography>

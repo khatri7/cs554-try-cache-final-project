@@ -48,11 +48,7 @@ const Home: React.FC<{}> = () => {
 		<div className="homepage">
 			<div className="homepage__search-container">
 				<div className="homepage__search-container--overlay" />
-				<Typography
-					variant="h4"
-					component="p"
-					className="homepage__search-container__text"
-				>
+				<Typography variant="h1" className="homepage__search-container__text">
 					Find Your Perfect Home
 				</Typography>
 				<div className="homepage__search-container__search-bar">
