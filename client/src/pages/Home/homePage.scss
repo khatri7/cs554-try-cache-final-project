@@ -53,17 +53,17 @@
 		gap: 4rem;
 
 		&__card-btn {
-			background-color: transparent;
-			border: 1px solid $primary-color;
-			color: $primary-color;
+			background-color: #faf9f6;
+			border: 1px solid #0774d1;
+			color: #0774d1;
 			font-size: 1.1rem;
 			padding: 0.5rem 1rem;
 			border-radius: 5px;
 			cursor: pointer;
 			@include transition(all, 0.3s);
 			&:hover {
-				background-color: $primary-color;
-				color: white;
+				background-color: #0774d1;
+				color: #faf9f6;
 			}
 		}
 
