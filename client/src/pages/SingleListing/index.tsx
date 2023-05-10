@@ -221,8 +221,12 @@ const SingleListing: React.FC<{}> = () => {
 	);
 	useEffect(() => {
 		async function getListing() {
-			const listing = await GET<{ listing: Listing }>(`/listings/${id}`);
-			setCurrListing(listing);
+			try {
+				const listing = await GET<{ listing: Listing }>(`/listings/${id}`);
+				setCurrListing(listing);
+			} catch (e: any) {
+				navigate('/404');
+			}
 		}
 
 		getListing();
