@@ -375,7 +375,7 @@ const SingleListing: React.FC<{}> = () => {
 				// }}
 			>
 				<Box sx={style}>
-					<Typography id="modal-modal-title" variant="h6" component="h2">
+					<Typography id="modal-modal-title" variant="h6" component="p">
 						Update Listing
 					</Typography>
 					<TextField
@@ -477,7 +477,7 @@ const SingleListing: React.FC<{}> = () => {
 			</Modal>
 			<Modal open={deleteModal} onClose={() => setDeleteModal(false)}>
 				<Box sx={style}>
-					<Typography id="modal-modal-title" variant="h6" component="h2">
+					<Typography id="modal-modal-title" variant="h6" component="p">
 						Confirm Delete
 					</Typography>
 					<Typography id="modal-modal-description" sx={{ mt: 2 }}>
