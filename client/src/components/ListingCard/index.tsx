@@ -38,7 +38,7 @@ const ListingCard: React.FC<{ listing: Listing }> = ({ listing }) => {
 				/>
 				<Box>
 					<CardContent>
-						<Typography gutterBottom sx={{ fontSize: '40px' }}>
+						<Typography gutterBottom sx={{ fontSize: '30px' }}>
 							{formatter.format(listing.rent)}/mo
 						</Typography>
 						{listing.apt && <Typography>Apt {listing.apt}</Typography>}

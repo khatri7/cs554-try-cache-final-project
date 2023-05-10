@@ -187,8 +187,8 @@ function CreateListing() {
 					<TextField
 						name="description"
 						label="Description"
-						multiline
 						minRows={4}
+						multiline
 						fullWidth
 						value={formValues.description}
 						onChange={handleChange}
@@ -237,7 +237,7 @@ function CreateListing() {
 					</Stack>
 					<Stack direction="row" gap={4} sx={{ width: '100%' }}>
 						<FormControl fullWidth>
-							<FormLabel component="legend">Pet Policy</FormLabel>
+							<FormLabel component="div">Pet Policy</FormLabel>
 							<RadioGroup
 								aria-label="petPolicy"
 								name="petPolicy"
@@ -257,7 +257,7 @@ function CreateListing() {
 							</RadioGroup>
 						</FormControl>
 						<FormControl fullWidth>
-							<FormLabel component="legend">Laundry</FormLabel>
+							<FormLabel component="div">Laundry</FormLabel>
 							<RadioGroup
 								aria-label="laundry"
 								name="laundry"
@@ -282,7 +282,7 @@ function CreateListing() {
 							</RadioGroup>
 						</FormControl>
 						<FormControl fullWidth>
-							<FormLabel component="legend">Parking</FormLabel>
+							<FormLabel component="div">Parking</FormLabel>
 							<RadioGroup
 								aria-label="Parking"
 								name="parking"
