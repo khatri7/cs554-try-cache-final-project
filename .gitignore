@@ -2,6 +2,7 @@ node_modules
 .DS_Store
 .env
 build
+grader-credentials.txt
 
 # Firebase
 serviceAccountKey.json
