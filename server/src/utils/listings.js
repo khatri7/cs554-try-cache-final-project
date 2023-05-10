@@ -165,6 +165,7 @@ export const isValidUpdateListingObj = (listingObj) => {
 					'Availability Date'
 			  ).format('MM-DD-YYYY')
 			: null,
-		occupied: listingObj.occupied ? listingObj.occupied : null,
+		occupied:
+			typeof listingObj.occupied === 'boolean' ? listingObj.occupied : null,
 	};
 };

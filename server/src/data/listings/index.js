@@ -285,7 +285,7 @@ export const updateListing = async (listingIdParam, user, listingObjParam) => {
 		deposit: deposit || oldListing.deposit,
 		availabilityDate: availabilityDate || oldListing.availabilityDate,
 		location: oldListing.location,
-		occupied: occupied || oldListing.occupied,
+		occupied: typeof occupied === 'boolean' ? occupied : oldListing.occupied,
 		photos: oldListing.photos,
 	};
 	const listingsCollection = await listings();
