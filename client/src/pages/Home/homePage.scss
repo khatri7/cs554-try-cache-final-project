@@ -54,15 +54,15 @@
 
 		&__card-btn {
 			background-color: #faf9f6;
-			border: 1px solid #0774d1;
-			color: #0774d1;
+			border: 1px solid $primary-color;
+			color: $primary-color;
 			font-size: 1.1rem;
 			padding: 0.5rem 1rem;
 			border-radius: 5px;
 			cursor: pointer;
 			@include transition(all, 0.3s);
 			&:hover {
-				background-color: #0774d1;
+				background-color: $primary-color;
 				color: #faf9f6;
 			}
 		}

@@ -55,7 +55,9 @@ function MyApplications() {
 					<TableRow>
 						{tableHeaders.map((header) => (
 							<TableCell key={header}>
-								<Typography variant="h6">{header}</Typography>
+								<Typography variant="h6" component="p">
+									{header}
+								</Typography>
 							</TableCell>
 						))}
 					</TableRow>
